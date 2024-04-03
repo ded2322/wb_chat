@@ -1,6 +1,8 @@
 from jose import ExpiredSignatureError, JWTError, jwt
 from fastapi import Request, HTTPException, Depends
 from datetime import datetime, timedelta
+
+from jwt import DecodeError
 from passlib.context import CryptContext
 
 from core.config import settings
@@ -45,8 +47,10 @@ def wb_decode_jwt(token: str) -> int:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
         return int(payload.get("sub"))
-    except (ExpiredSignatureError, JWTError) as e:
+    except (ExpiredSignatureError, JWTError, DecodeError) as e:
         if isinstance(e, ExpiredSignatureError):
             raise HTTPException(status_code=401, detail="The access token has expired")
         if isinstance(e, JWTError):
             raise HTTPException(status_code=401, detail="Invalid access token format")
+        if isinstance(e, DecodeError):
+            raise HTTPException(status_code=401, detail="TOKEN")

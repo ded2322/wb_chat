@@ -36,30 +36,28 @@ class MessageService:
             while True:
                 # принятие от клиента сообщения, в виде json
                 data_json = await websocket.receive_text()
-                print("Приняли конект")
+
                 # с помощью pydantic можем обращаться к токену и сообщению по отдельности
                 # т.к это все идет в виде строки
                 websocket_data = WebSocketData.parse_raw(data_json)
-                print("Приводим к нормальному виду")
+
                 # переменные с id пользователем и сообщением пользователя
                 user_id = wb_decode_jwt(websocket_data.token)
                 user_message = websocket_data.message
-
                 # добавляем сообщение в базу данных
                 await cls.add_message_db(user_message, user_id)
-                print("добавляем сообщение в базу данных")
+
                 # сериализация данных в json
                 data_send = await cls.serialization_data(user_id, user_message)
-                print("сериализация данных в json")
                 # отправка данных персонально (клиенту)
-                await manager.send_personal_message({data_send}, websocket)
-                print("отправка данных персонально (клиенту)")
+                await manager.send_personal_message(data_send, websocket)
+
                 # отправка данных всем
-                await manager.broadcast({data_send}, websocket)
+                await manager.broadcast(data_send, websocket)
 
         except WebSocketDisconnect:
             manager.disconnect(websocket)
-            await manager.broadcast({"event": "Client left the chat"})
+            await manager.broadcast(json.dumps({"event": "Client left the chat"}))
 
     @staticmethod
     async def add_message_db(message: str, user_id: int):
