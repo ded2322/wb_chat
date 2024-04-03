@@ -55,9 +55,12 @@ class MessageService:
                 # отправка данных всем
                 await manager.broadcast(data_send, websocket)
 
-        except WebSocketDisconnect:
-            manager.disconnect(websocket)
-            await manager.broadcast(json.dumps({"event": "Client left the chat"}))
+        except (WebSocketDisconnect, Exception) as e:
+            if isinstance(e, WebSocketDisconnect):
+                manager.disconnect(websocket)
+                await manager.broadcast(json.dumps({"event": "Client left the chat"}))
+            if isinstance(e, Exception):
+                print(str(e))
 
     @staticmethod
     async def add_message_db(message: str, user_id: int):
