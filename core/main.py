@@ -18,13 +18,14 @@ app.include_router(user_router)
 app.include_router(chat_router)
 
 
+origins = ['http://localhost:3000', 'https://localhost:5173']
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=['Access-Control-Allow-Origin']
 )
 
 
