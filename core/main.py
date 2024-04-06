@@ -1,6 +1,5 @@
 import uvicorn
 from fastapi import FastAPI
-from fastapi_versioning import VersionedFastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.chat.router import router as chat_router
@@ -29,12 +28,6 @@ app.add_middleware(
                    "Access-Control-Allow-Origin", "Authorization"],
 )
 
-
-app = VersionedFastAPI(app,
-    version_format='{major}',
-    prefix_format='/v{major}',
-    description="Это основная версия, находящиеся здесь ручки сделаны или почти сделаны",
-)
 
 app.include_router(wb_router)
 

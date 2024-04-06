@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Response, Depends
-from fastapi_versioning import version
 
 from core.chat.users.auth import decode_jwt
 from core.schemas.users_schemas import UserDataSchema, UserUpdateDataSchema
@@ -16,14 +15,7 @@ router_user = APIRouter(
 )
 
 
-@router_auth.options("/void")
-@version(1)
-async def options_route():
-    return {"message": "This route supports OPTIONS method"}
-
-
 @router_auth.post("/register", status_code=201, summary="Register user")
-@version(1)
 async def register_user(data_user: UserDataSchema):
     """
     Позволяет создавать пользователя.
@@ -34,7 +26,6 @@ async def register_user(data_user: UserDataSchema):
 
 
 @router_user.get("/all", status_code=200, summary="Show all users")
-@version(1)
 async def all_user():
     """
     Возвращает данные всех пользователей
@@ -44,7 +35,6 @@ async def all_user():
 
 
 @router_user.get("/me", status_code=200, summary="Show info about user")
-@version(1)
 async def user_info(jwt_token=Depends(decode_jwt)):
     """
     Возвращает данные по конкретному пользователю, по его jwt.
@@ -55,7 +45,6 @@ async def user_info(jwt_token=Depends(decode_jwt)):
 
 
 @router_user.post("/login", status_code=200, summary="Login user")
-@version(1)
 async def login_user(response: Response, data_user: UserDataSchema):
     """
     Аутентификация пользователя
@@ -66,7 +55,6 @@ async def login_user(response: Response, data_user: UserDataSchema):
 
 
 @router_user.post("/logout", status_code=204, summary="Logout user")
-@version(1)
 async def logout_user(response: Response):
     """
     "Выход из аккаунта", просто удаляет jwt token
@@ -76,7 +64,6 @@ async def logout_user(response: Response):
 
 
 @router_user.patch("/update", status_code=201, summary="Update data user")
-@version(1)
 async def update_name(data_update: UserUpdateDataSchema, data_jwt=Depends(decode_jwt)):
     """
     Обновляет данные пользователя, все поля опциональным
@@ -87,7 +74,6 @@ async def update_name(data_update: UserUpdateDataSchema, data_jwt=Depends(decode
 
 
 @router_user.delete("/delete", status_code=204, summary="Delete user")
-@version(1)
 async def delete_user(response: Response, jwt_token=Depends(decode_jwt)):
     """
     Удаляет аккаунт и jwt токен
