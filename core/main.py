@@ -18,7 +18,7 @@ app.include_router(user_router)
 app.include_router(chat_router)
 
 
-origins = ['http://localhost:3000', 'https://localhost:5173']
+origins = ['http://localhost:3000', 'http://localhost:5173']
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,9 +34,6 @@ app = VersionedFastAPI(app,
     version_format='{major}',
     prefix_format='/v{major}',
     description="Это основная версия, находящиеся здесь ручки сделаны или почти сделаны",
-    #middleware=[
-    #    Middleware(SessionMiddleware, secret_key='mysecretkey')
-    #]
 )
 
 app.include_router(wb_router)

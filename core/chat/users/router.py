@@ -16,6 +16,12 @@ router_user = APIRouter(
 )
 
 
+@router_auth.options("/void")
+@version(1)
+async def options_route():
+    return {"message": "This route supports OPTIONS method"}
+
+
 @router_auth.post("/register", status_code=201, summary="Register user")
 @version(1)
 async def register_user(data_user: UserDataSchema):
