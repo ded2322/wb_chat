@@ -8,6 +8,10 @@ class UserDataSchema(BaseModel):
     password: str
 
 
+class JWTTokenSchema(BaseModel):
+    token: str
+
+
 class UserUpdateDataSchema(BaseModel):
     name: Optional[str] = None
     password: Optional[str] = None

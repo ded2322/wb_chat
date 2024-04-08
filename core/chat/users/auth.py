@@ -25,25 +25,7 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def get_token(request: Request) -> str:
-    token = request.cookies.get("access_token")
-    if not token:
-        raise HTTPException(status_code=404, detail="Not found cookies")
-    return token
-
-
-async def decode_jwt(token=Depends(get_token)) -> dict:
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
-        return payload
-    except (ExpiredSignatureError, JWTError) as e:
-        if isinstance(e, ExpiredSignatureError):
-            raise HTTPException(status_code=401, detail="The access token has expired")
-        if isinstance(e, JWTError):
-            raise HTTPException(status_code=401, detail="Invalid access token format")
-
-
-def wb_decode_jwt(token: str) -> int:
+def decode_jwt_user_id(token: str) -> int:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
         return int(payload.get("sub"))

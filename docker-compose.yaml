@@ -9,6 +9,24 @@ services:
       ports:
         - "5432:5432"
 
+  redis:
+    image: redis:7
+    container_name: chat_redis
+    ports:
+      - "6379:6379"
+
+  celery:
+    image: chat_celery
+    build:
+      context: .
+    container_name: chat_celery
+    command: sh -c "celery -A core.tasks.celery_config:celery worker -l INFO"
+    env_file:
+      - .env_dev
+    depends_on:
+      - redis
+
+
   chat_service:
     image: chat_app
     build:
