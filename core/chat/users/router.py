@@ -36,8 +36,8 @@ async def all_user():
 @router_user.post("/me", status_code=200, summary="Show info about user")
 async def user_info(jwt_token: JWTTokenSchema):
     """
-    Возвращает данные по конкретному пользователю, по его jwt.
-    :param: Использует jwt token из браузера пользователя.
+    Возвращает данные по конкретному пользователю. На основе его jwt.
+    :param: Использует jwt token принимаемый в виде json.
     :return: Если успешно 200 статус код. json с данным пользователя
     """
     return await UserService.user_info(jwt_token)
@@ -47,8 +47,8 @@ async def user_info(jwt_token: JWTTokenSchema):
 async def login_user(data_user: UserDataSchema):
     """
     Аутентификация пользователя
-    :param: Все параметры обязательны
-    :return: Если успешно 201 статус код, json с сообщением
+    :param: Все параметры обязательны.
+    :return: Возвращает json с jwt токеном пользователя. При успешном входе 201 статус код.
     """
     return await UserService.login_user(data_user)
 
@@ -57,8 +57,8 @@ async def login_user(data_user: UserDataSchema):
 async def update_name(jwt_token: JWTTokenSchema, data_update: UserUpdateDataSchema):
     """
     Обновляет данные пользователя, все поля опциональным
-    :param: Для успешного обновления нужен jwt токен
-    :return: Если успешно 201 статус код, json с данным пользователя
+    :param: Для успешного обновления нужно передать jwt token
+    :return: Возвращает json с сообщением. При успешном обновлении 201 статус код.
     """
     return await UserService.update_data_user(data_update, jwt_token)
 
@@ -67,7 +67,7 @@ async def update_name(jwt_token: JWTTokenSchema, data_update: UserUpdateDataSche
 async def delete_user(jwt_token: JWTTokenSchema):
     """
     Удаляет аккаунт
-    :param: Для успешного обновления нужен jwt токен
+    :param: Для успешного обновления нужно передать jwt token
     :return: Если успешно 204 статус код
     """
     await UserService.delete_user(jwt_token)

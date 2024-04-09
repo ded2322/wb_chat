@@ -1,4 +1,3 @@
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -16,6 +15,7 @@ app.mount("/static",StaticFiles(directory="core/static"), "static")
 
 
 # todo сделать логи
+# todo админку
 
 # celery -A core.tasks.celery_config:celery worker --loglevel=INFO --pool=solo
 # alembic revision --autogenerate -m "init"  alembic upgrade head
@@ -42,6 +42,3 @@ app.add_middleware(
 
 
 app.include_router(wb_router)
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)

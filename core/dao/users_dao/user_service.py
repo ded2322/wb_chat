@@ -10,10 +10,16 @@ from core.chat.users.auth import get_password_hash, verification_password, creat
 class UserService:
     @classmethod
     async def show_all_users(cls):
+        """
+
+        :return:
+        """
         return await UserDao.show_all_data()
 
     @classmethod
     async def user_info(cls, jwt_token: JWTTokenSchema):
+        """
+        """
         try:
             user_info = await UserDao.select_user_info(decode_jwt_user_id(jwt_token.token))
             if not user_info:
@@ -24,6 +30,11 @@ class UserService:
 
     @classmethod
     async def register_user(cls, data_user: UserDataSchema):
+        """
+
+        :param data_user:
+        :return:
+        """
         try:
             if await UserDao.found_or_none_data(name=data_user.name):
                 return JSONResponse(status_code=409, content={"detail": "Name is occupied"})
@@ -40,6 +51,11 @@ class UserService:
 
     @classmethod
     async def login_user(cls, data_user: UserDataSchema):
+        """
+
+        :param data_user:
+        :return:
+        """
         try:
             user = await UserDao.found_or_none_data(name=data_user.name)
             if not user or not verification_password(data_user.password, user["password"]):
@@ -54,6 +70,12 @@ class UserService:
 
     @classmethod
     async def update_data_user(cls, data_update: UserUpdateDataSchema, jwt_token: JWTTokenSchema):
+        """
+
+        :param data_update:
+        :param jwt_token:
+        :return:
+        """
         try:
             user_data = await UserDao.found_or_none_data(id=decode_jwt_user_id(jwt_token.token))
             if not user_data:
@@ -78,6 +100,11 @@ class UserService:
 
     @classmethod
     async def delete_user(cls, jwt_token: JWTTokenSchema):
+        """
+
+        :param jwt_token:
+        :return:
+        """
         try:
             await UserDao.delete_data(id=decode_jwt_user_id(jwt_token.token))
         except Exception as e:

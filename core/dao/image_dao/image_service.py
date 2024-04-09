@@ -10,6 +10,12 @@ class ImageService:
 
     @classmethod
     def save_resize_image(cls, token: str, image: UploadFile):
+        """
+
+        :param token:
+        :param image:
+        :return:
+        """
         valid_extension = ["png", "jpg", "webp"]
         file_extension = image.filename.split(".")[-1]
 

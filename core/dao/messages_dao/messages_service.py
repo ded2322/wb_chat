@@ -10,6 +10,7 @@ from core.dao.users_dao.user_dao import UserDao
 from core.chat.chat_websoket.web_socket import manager
 from core.dao.image_dao.image_dao import ImageDao
 
+
 class MessageService:
 
     @classmethod
@@ -45,7 +46,6 @@ class MessageService:
                 print("Декодирование токена")
                 user_id = decode_jwt_user_id(websocket_data.token)
                 user_message = websocket_data.message
-
 
                 print("добавляем сообщение в базу данных")
                 # добавляем сообщение в базу данных
@@ -86,6 +86,7 @@ class MessageService:
         await MessagesDao.insert_data(user_id=user_id, message=message,
                                       time_sent=time_object)
         return str(formatted_time)
+
     @staticmethod
     async def serialization_data(user_id: int, message: str, date_send):
         """
@@ -98,6 +99,7 @@ class MessageService:
         file_path = await ImageDao.file_path(user_id)
         # дата
         # "https://sun9-29.userapi.com/impg/pz9-fVteFIutK6Sv301oGwJ2R3zqvCLD2eNfhw/ibCOtsp660k.jpg?size=900x1273&quality=95&sign=19b109da64ca92935675a770365a4d0a&type=album"
-        data = {"username": data_user["name"], "image":file_path["image_path"], "message": message, "data_send":date_send, "who_sender": False}
+        data = {"username": data_user["name"], "image": file_path["image_path"], "message": message,
+                "data_send": date_send, "who_sender": False}
 
         return json.dumps(data)
