@@ -4,6 +4,7 @@ from PIL import Image
 
 from core.tasks.celery_config import celery
 from core.dao.image_dao.image_dao import ImageDao
+from core.logs.logs import logger_error
 
 
 @celery.task
@@ -12,23 +13,22 @@ def process_pic(
         user_id: int
 ):
     """
-
-    :param path:
-    :param user_id:
-    :return:
+    Уменьшает изображение с сохранением пропорций и высоким качеством
     """
-    img_path = Path(path)
-    img = Image.open(img_path)
-    width = 72
-    height = 72
+    try:
+        img_path = Path(path)
+        img = Image.open(img_path)
 
-    # Уменьшаем размер до 72x72 пикселей
-    img_resized = img.resize((width, height))
+        max_size = (72, 72)
+        # Уменьшение изображение с учетом его сторон
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-    image_path = f"core/static/resize_images/resize_image_user_{user_id}.webp"
-    # Сохраняем уменьшенное изображение
-    img_resized.save(image_path)
+        image_path = f"core/static/resize_images/resize_image_user_{user_id}.webp"
+        img.save(image_path)
 
-    loop = asyncio.get_event_loop()
-    user_id = loop.run_until_complete(ImageDao.found_id_by_userid(user_id))
-    loop.run_until_complete(ImageDao.update_data(user_id["id"], "image_path", image_path))
+        # Создание цикла событий
+        loop = asyncio.get_event_loop()
+        user_id = loop.run_until_complete(ImageDao.found_data_by_column("id", user_id=user_id))
+        loop.run_until_complete(ImageDao.update_data(user_id["id"], image_path=image_path))
+    except Exception as e:
+        logger_error.error(f"Error in process_pic {str(e)}")

@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from core.schemas.users_schemas import UserDataSchema, UserUpdateDataSchema, JWTTokenSchema
 from core.dao.users_dao.user_service import UserService
+from core.logs.logs import logger_response
 
 router_auth = APIRouter(
     prefix="/auth",
@@ -21,6 +22,7 @@ async def register_user(data_user: UserDataSchema):
     Все параметры обязательны.
     :return: Если успешно 201 статус код. Json с сообщением
     """
+    logger_response.info("User registered")
     return await UserService.register_user(data_user)
 
 
@@ -30,6 +32,7 @@ async def all_user():
     Возвращает данные всех пользователей
     :return: Если успешно 200 статус код. Данные в виде json
     """
+    logger_response.info("Show all user")
     return await UserService.show_all_users()
 
 
@@ -40,6 +43,7 @@ async def user_info(jwt_token: JWTTokenSchema):
     :param: Использует jwt token принимаемый в виде json.
     :return: Если успешно 200 статус код. json с данным пользователя
     """
+    logger_response.info("Show info user")
     return await UserService.user_info(jwt_token)
 
 
@@ -50,24 +54,27 @@ async def login_user(data_user: UserDataSchema):
     :param: Все параметры обязательны.
     :return: Возвращает json с jwt токеном пользователя. При успешном входе 201 статус код.
     """
+    logger_response.info("User is login")
     return await UserService.login_user(data_user)
 
 
 @router_user.patch("/update", status_code=201, summary="Update data user")
-async def update_name(jwt_token: JWTTokenSchema, data_update: UserUpdateDataSchema):
+async def update_data_user(jwt_token: JWTTokenSchema, data_update: UserUpdateDataSchema):
     """
     Обновляет данные пользователя, все поля опциональным
     :param: Для успешного обновления нужно передать jwt token
     :return: Возвращает json с сообщением. При успешном обновлении 201 статус код.
     """
+    logger_response.info("User update data")
     return await UserService.update_data_user(data_update, jwt_token)
 
 
-@router_user.delete("/delete", status_code=204, summary="Delete user")
+@router_user.delete("/delete", status_code=201, summary="Delete user")
 async def delete_user(jwt_token: JWTTokenSchema):
     """
     Удаляет аккаунт
     :param: Для успешного обновления нужно передать jwt token
     :return: Если успешно 204 статус код
     """
-    await UserService.delete_user(jwt_token)
+    logger_response.info("User deleted")
+    return await UserService.delete_user(jwt_token)

@@ -2,13 +2,16 @@ import json
 
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime
+from pydantic import ValidationError
 
-from core.schemas.message_schemas import WebSocketData
+from core.schemas.message_schemas import WebSocketDataSchema
 from core.chat.users.auth import decode_jwt_user_id
 from core.dao.messages_dao.messages_dao import MessagesDao
 from core.dao.users_dao.user_dao import UserDao
 from core.chat.chat_websoket.web_socket import manager
 from core.dao.image_dao.image_dao import ImageDao
+from core.logs.logs import logger_websocket
+from core.schemas.message_schemas import MessageLoadSchema
 
 
 class MessageService:
@@ -16,90 +19,95 @@ class MessageService:
     @classmethod
     async def show_messages_data(cls):
         """
-
-        :return:
+        Отображает последние 50 сообщений.
+        :return: Список словарей
         """
-
         return await MessagesDao.show_all_data()
 
     @classmethod
-    async def create_connect(cls, websocket: WebSocket):
+    async def load_message(cls, id_message: MessageLoadSchema):
         """
+        Загружает дополнительно 50 сообщений.
+        Принимает id последнего сообщения.
+        :return: Список словарей
+        """
+        return await MessagesDao.load_messages(id_message.id_last_message)
 
-        :param websocket:
-        :return:
-        """
-        # подключение к websocket
+    @classmethod
+    async def create_connect(cls, websocket: WebSocket):
+        import time
+        start = time.time()
         await manager.connect(websocket)
+        logger_websocket.info(f"User connected")
 
         try:
             while True:
-                # принятие от клиента сообщения, в виде json
                 data_json = await websocket.receive_text()
-                print("Принятие json")
-                # с помощью pydantic можем обращаться к токену и сообщению по отдельности
-                # т.к это все идет в виде строки
-                print("Десериализация")
-                websocket_data = WebSocketData.parse_raw(data_json)
+
+                try:
+                    websocket_data = WebSocketDataSchema.parse_raw(data_json)
+                except ValidationError as e:
+                    logger_websocket.error(f"Invalid message format: {str(e)}")
+                    continue
 
                 # переменные с id пользователем и сообщением пользователя
-                print("Декодирование токена")
                 user_id = decode_jwt_user_id(websocket_data.token)
                 user_message = websocket_data.message
 
-                print("добавляем сообщение в базу данных")
-                # добавляем сообщение в базу данных
-                date_sender = await cls.add_message_db(user_message, user_id)
+                await cls.process_message(user_id, user_message, websocket)
 
-                print("сериализация данных в json")
-                # сериализация данных в json
-                data_send = await cls.serialization_data(user_id, user_message, date_sender)
+                end = time.time()
 
-                # отправка данных персонально (клиенту)
-                print("отправка данных персонально (клиенту)")
-                await manager.send_personal_message(data_send, websocket)
-
-                # отправка данных всем подключенным
-                print("отправка данных всем подключенным")
-                await manager.broadcast(data_send, websocket)
-
+                print(end - start)
         except (WebSocketDisconnect, Exception) as e:
             if isinstance(e, WebSocketDisconnect):
                 manager.disconnect(websocket)
-                await manager.broadcast(json.dumps({"event": "Client left the chat"}))
+                logger_websocket.info(f"User disconnected")
             if isinstance(e, Exception):
-                print(str(e))
+                logger_websocket.error(f"Error in create_connect: {str(e)}")
+
+    @classmethod
+    async def process_message(cls, user_id: int, message: str, websocket: WebSocket):
+        try:
+            date_sender = await cls.add_message_db(user_id, message)
+            data_send = await cls.serialization_data(user_id, message, date_sender)
+
+            await manager.send_personal_message(json.dumps(data_send), websocket)
+            data_send["user_side"] = False
+            await manager.broadcast(json.dumps(data_send), websocket)
+
+        except Exception as e:
+            logger_websocket.error(f"Error processing message: {str(e)}")
 
     @staticmethod
-    async def add_message_db(message: str, user_id: int):
+    async def add_message_db(user_id: int, message: str):
         """
-
-        :param message:
-        :param user_id:
-        :return:
+        Добавляет данные в базу данных.
+        Возвращает время когда было отправлено сообщение
         """
         current_time = datetime.now().time()
 
         formatted_time = current_time.strftime("%H:%M:%S")
         time_object = datetime.strptime(formatted_time, '%H:%M:%S').time()
 
+        # Добавляем в базу данных сообщение
         await MessagesDao.insert_data(user_id=user_id, message=message,
-                                      time_sent=time_object)
-        return str(formatted_time)
+                                      time_send=time_object)
+        return formatted_time
 
     @staticmethod
     async def serialization_data(user_id: int, message: str, date_send):
         """
-
-        :param user_id:
-        :param message:
-        :return:
+        Сериализует данные в json.
+        Возвращает json с ником, изображение, сообщением, датой отправки, ?с какой стороны сообщение?
         """
-        data_user = await UserDao.found_name_by_id(user_id)
-        file_path = await ImageDao.file_path(user_id)
-        # дата
-        # "https://sun9-29.userapi.com/impg/pz9-fVteFIutK6Sv301oGwJ2R3zqvCLD2eNfhw/ibCOtsp660k.jpg?size=900x1273&quality=95&sign=19b109da64ca92935675a770365a4d0a&type=album"
-        data = {"username": data_user["name"], "image": file_path["image_path"], "message": message,
-                "data_send": date_send, "who_sender": False}
+        data_user = await UserDao.found_data_by_column("name", id=user_id)
+        file_path = await ImageDao.found_data_by_column("image_path", user_id=user_id)
 
-        return json.dumps(data)
+        data = {"username": data_user["name"],
+                "image": file_path["image_path"],
+                "message": message,
+                "time_send": date_send,
+                "user_side": True}
+
+        return data

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile
 
 from core.dao.image_dao.image_service import ImageService
+from core.logs.logs import logger_response
 
 router = APIRouter(
     prefix="/avatar",
@@ -16,4 +17,5 @@ async def upload_avatar(token: str, image: UploadFile):
     :param image: Принимает изображение. Доступные расширения файлов ["png", "jpg", "webp"]
     :return: При успешной установке аватара {"message": "Image installed successfully"}.
     """
+    logger_response.info("User upload image")
     return ImageService.save_resize_image(token, image)

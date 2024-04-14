@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from core.dao.messages_dao.messages_service import MessageService
-
+from core.schemas.message_schemas import MessageLoadSchema
 
 router = APIRouter(
     prefix="/chat",
@@ -18,18 +18,11 @@ async def get_last_messages():
     return await MessageService.show_messages_data()
 
 
-'''@router.patch("/update")
-async def update_messages():
+@router.post("/load", status_code=200, summary="Load additional message")
+async def load_message(id_message: MessageLoadSchema):
     """
-    В разработке
+    Загружает дополнительные 50 сообщений.
+    Нужно передать id последнего сообщения
+    :return: json формата [{}, {}]
     """
-    ...
-
-
-@router.delete("/delete")
-async def delete_messages():
-    """
-    В разработке
-    """
-    ...
-'''
+    return await MessageService.load_message(id_message)
