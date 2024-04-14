@@ -104,7 +104,7 @@ class MessageService:
         data_user = await UserDao.found_data_by_column("name", id=user_id)
         file_path = await ImageDao.found_data_by_column("image_path", user_id=user_id)
 
-        data = {"username": data_user["name"],
+        data = {"name": data_user["name"],
                 "image": file_path["image_path"],
                 "message": message,
                 "time_send": date_send,
