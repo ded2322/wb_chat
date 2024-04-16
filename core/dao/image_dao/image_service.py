@@ -52,7 +52,7 @@ class ImageService:
         max_size = (72, 72)
         img.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-        image_path = f"/core/static/resize_images/resize_image_user_{user_id}.webp"
+        image_path = f"/static/resize_images/resize_image_user_{user_id}.webp"
 
         with open(image_path, "wb") as file:
             img.save(file, format="WebP", lossless=True, quality=100, method=6)

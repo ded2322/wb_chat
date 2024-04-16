@@ -24,7 +24,6 @@ app.mount("/static",StaticFiles(directory="core/static"), "static")
 # todo переделать админку
 # todo картинка удаленного пользователя, картинка на вкладку
 
-# celery -A core.tasks.celery_config:celery worker --loglevel=INFO --pool=solo
 # alembic revision --autogenerate -m "init"  alembic upgrade head
 '''
 DB_USER=postgres

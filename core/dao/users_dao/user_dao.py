@@ -23,7 +23,8 @@ class UserDao(BaseDao):
                 SELECT users.name, users.password, images.image_path FROM users
                 LEFT JOIN images on users.id = images.user_id
                 """
-                query = (select(cls.model.id, cls.model.name, Image.image_path)
+                                # user_id?
+                query = (select(cls.model.id.label("user_id"), cls.model.name, Image.image_path)
                          .select_from(cls.model)
                          .join(Image, cls.model.id == Image.user_id, isouter=True)
                          .where(cls.model.id == user_id)
