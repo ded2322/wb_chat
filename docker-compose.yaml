@@ -9,22 +9,6 @@ services:
       ports:
         - "5432:5432"
 
-  redis:
-    image: redis:7
-    container_name: chat_redis
-    ports:
-      - "6379:6379"
-
-  celery:
-    image: chat_celery
-    build:
-      context: .
-    container_name: chat_celery
-    command: sh -c "celery -A core.tasks.celery_config:celery worker -l INFO"
-    env_file:
-      - .env_dev
-    depends_on:
-      - redis
 
 
   chat_service:
@@ -39,6 +23,8 @@ services:
     command: sh -c "alembic upgrade head && uvicorn core.main:app --host 0.0.0.0 --port 8000"
     ports:
       - 8000:8000
+    volumes:
+      - ./core/static:/core/static
 
 
 

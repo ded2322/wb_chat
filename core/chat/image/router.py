@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile
+from fastapi.responses import FileResponse
 
 from core.dao.image_dao.image_service import ImageService
 from core.logs.logs import logger_response
@@ -8,6 +9,16 @@ router = APIRouter(
     tags=["Upload image"]
 )
 
+
+@router.get("/images/{user_id}")
+async def get_user_image(user_id: str):
+    image_path = f"/static/resize_images/resize_image_user_{user_id}.webp"
+    return FileResponse(image_path)
+
+@router.get("/image-url/{user_id}")
+def get_image_url(user_id: str):
+    image_url = f"/static/image_default/resize_image_{user_id}.webp"
+    return {"image_url": image_url}
 
 @router.post("/upload", status_code=201, summary="Update avatar user")
 async def upload_avatar(token: str, image: UploadFile):

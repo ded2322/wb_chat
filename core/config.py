@@ -8,9 +8,6 @@ class Settings(BaseSettings):
     DB_PORT: int
     DB_NAME: str
 
-    REDIS_HOST: str
-    REDIS_PORT: int
-
     SECRET_KEY: str
     ALGORITHM: str
 

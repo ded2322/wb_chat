@@ -22,19 +22,16 @@ app.mount("/static",StaticFiles(directory="core/static"), "static")
 
 # todo роли
 # todo переделать админку
-# todo картинка удаленного пользователя
+# todo картинка удаленного пользователя, картинка на вкладку
 
 # celery -A core.tasks.celery_config:celery worker --loglevel=INFO --pool=solo
 # alembic revision --autogenerate -m "init"  alembic upgrade head
 '''
 DB_USER=postgres
-DB_PASS=root
-DB_NAME=App
-DB_HOST=localhost
+DB_PASS=postgres
+DB_NAME=chat_db
+DB_HOST=db
 DB_PORT=5432
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
 '''
 
 app.include_router(auth_router)
