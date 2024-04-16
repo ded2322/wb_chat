@@ -156,7 +156,7 @@ class UserService:
         list_avatar = [1, 2, 3, 4, 5]
 
         number_avatar = random.choice(list_avatar)
-        image_path = f"/static/image_default/image_default_{number_avatar}.webp"
+        image_path = f"/core/static/image_default/image_default_{number_avatar}.webp"
         try:
             user_info = await UserDao.found_data_by_column("id", name=name)
             await ImageDao.insert_data(user_id=user_info["id"], image_path=image_path)
