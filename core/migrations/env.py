@@ -12,6 +12,7 @@ from core.models.messages_models import Messages
 from core.models.users_models import Users
 from core.models.image_models import Image
 
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

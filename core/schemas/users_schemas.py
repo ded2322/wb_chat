@@ -3,7 +3,13 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class UserDataSchema(BaseModel):
+class UserDataRegisterSchema(BaseModel):
+    role: int = 1
+    name: str
+    password: str
+
+
+class UserDataLoginSchema(BaseModel):
     name: str
     password: str
 

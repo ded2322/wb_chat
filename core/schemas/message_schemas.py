@@ -6,5 +6,16 @@ class WebSocketDataSchema(BaseModel):
     message: str
 
 
-class MessageLoadSchema(BaseModel):
-    id_last_message: int
+class MessageSchema(BaseModel):
+    id_message: int
+
+
+class MessageDeleteSchema(BaseModel):
+    token: str
+    id_message: int
+
+
+class MessageUpdateSchema(BaseModel):
+    token: str
+    message_id: int
+    message: str

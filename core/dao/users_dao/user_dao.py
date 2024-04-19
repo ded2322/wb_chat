@@ -23,13 +23,31 @@ class UserDao(BaseDao):
                 SELECT users.name, users.password, images.image_path FROM users
                 LEFT JOIN images on users.id = images.user_id
                 """
-                                # user_id?
-                query = (select(cls.model.id.label("user_id"), cls.model.name, Image.image_path)
+                query = (select(cls.model.id.label("user_id"), cls.model.name, cls.model.role,
+                                Image.image_path)
                          .select_from(cls.model)
                          .join(Image, cls.model.id == Image.user_id, isouter=True)
                          .where(cls.model.id == user_id)
                          )
                 result = await session.execute(query)
+                return result.mappings().one_or_none()
+            except (SQLAlchemyError, Exception) as e:
+                if isinstance(e, SQLAlchemyError):
+                    logger_error.error(f"SQLAlchemy exc in select_user_info: {str(e)}")
+                else:
+                    logger_error.error(f"Unknown exc in select_user_info: {str(e)}")
+
+    @classmethod
+    async def select_role_name_user(cls, **kwargs):
+        async with async_session_maker() as session:
+            try:
+                """
+                SELECT role, name FROM users
+                WHERE **kwargs
+                """
+                query = select(cls.model.role, cls.model.name).filter_by(**kwargs)
+                result = await session.execute(query)
+
                 return result.mappings().one_or_none()
             except (SQLAlchemyError, Exception) as e:
                 if isinstance(e, SQLAlchemyError):

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from core.schemas.users_schemas import UserDataSchema, UserUpdateDataSchema, JWTTokenSchema
+from core.schemas.users_schemas import UserDataRegisterSchema, UserDataLoginSchema, UserUpdateDataSchema, JWTTokenSchema
 from core.dao.users_dao.user_service import UserService
 from core.logs.logs import logger_response
 
@@ -15,8 +15,19 @@ router_user = APIRouter(
 )
 
 
-@router_auth.post("/register", status_code=201, summary="Register user")
-async def register_user(data_user: UserDataSchema):
+@router_auth.post("/register-admin", status_code=201, summary="Register admin")
+async def register_admin(data_user: UserDataRegisterSchema):
+    """
+    Регистрирует админа
+    :param data_user:
+    :return:
+    """
+    logger_response.info("Register admin")
+    return await UserService.register_user(data_user)
+
+
+@router_auth.post("/register-user", status_code=201, summary="Register user")
+async def register_default_user(data_user: UserDataRegisterSchema):
     """
     Позволяет создавать пользователя.
     Все параметры обязательны.
@@ -48,7 +59,7 @@ async def user_info(jwt_token: JWTTokenSchema):
 
 
 @router_user.post("/login", status_code=200, summary="Login user")
-async def login_user(data_user: UserDataSchema):
+async def login_user(data_user: UserDataLoginSchema):
     """
     Аутентификация пользователя
     :param: Все параметры обязательны.

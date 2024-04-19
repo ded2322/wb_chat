@@ -1,14 +1,13 @@
 from fastapi import APIRouter, WebSocket
-from fastapi_versioning import version
 
-from core.dao.messages_dao.messages_service import MessageService
+from core.dao.websocket_service.web_socket_service import WebsocketService
 
 router = APIRouter(
     prefix="",
-    tags=["Chat"]
+    tags=["Websocket"]
 )
 
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await MessageService.create_connect(websocket)
+    await WebsocketService.create_connect(websocket)

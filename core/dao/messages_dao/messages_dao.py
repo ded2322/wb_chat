@@ -28,7 +28,7 @@ class MessagesDao(BaseDao):
             try:
                 query = (select(cls.model.id.label("message_id"), cls.model.message, cls.model.time_send,
                                 Image.image_path,
-                                Users.id.label("user_id"), Users.name)
+                                Users.id.label("user_id"), Users.name, Users.role)
                          .select_from(cls.model)
                          .join(Users, cls.model.user_id == Users.id, isouter=True)
                          .join(Image, cls.model.user_id == Image.user_id, isouter=True)
@@ -59,7 +59,9 @@ class MessagesDao(BaseDao):
             LIMIT 50;
             """
             try:
-                query = (select(cls.model.id, cls.model.message, cls.model.time_send, Image.image_path, Users.name)
+                query = (select(cls.model.id, cls.model.message, cls.model.time_send,
+                                Image.image_path,
+                                Users.name, Users.role)
                          .select_from(cls.model)
                          .join(Users, cls.model.user_id == Users.id, isouter=True)
                          .join(Image, cls.model.user_id == Image.user_id, isouter=True)

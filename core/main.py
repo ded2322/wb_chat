@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 from sqladmin import Admin
 
+
 from core.chat.chat_websoket.router import router as chat_router
 from core.chat.users.router import router_auth as auth_router
 from core.chat.users.router import router_user as user_router
@@ -15,21 +16,21 @@ from core.admin.auth import authentication_backend
 
 app = FastAPI(
     title="Real-time chat",
-    version="1.2"
+    version="1.3"
 )
 
-app.mount("/static",StaticFiles(directory="core/static"), "static")
-
-# todo роли
-# todo переделать админку
+app.mount("/static", StaticFiles(directory="core/static"), "static")
+# todo удаленный пользователь
+# todo права при регистрации, админка
+# todo backgraund task
 # todo картинка удаленного пользователя, картинка на вкладку
 
 # alembic revision --autogenerate -m "init"  alembic upgrade head
 '''
 DB_USER=postgres
-DB_PASS=postgres
-DB_NAME=chat_db
-DB_HOST=db
+DB_PASS=root
+DB_NAME=App
+DB_HOST=localhost
 DB_PORT=5432
 '''
 

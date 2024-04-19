@@ -31,14 +31,14 @@ class ImageService:
             logger_error.error(f"User try upload {str(image)}")
             return JSONResponse(status_code=400, content={"detail": "Invalid extension"})
 
-        user_id = decode_jwt_user_id(token)
+        user_id = int(decode_jwt_user_id(token))
         file_path = f"/core/static/original_images/original_{user_id}.webp"
 
         with open(file_path, "wb+") as file_object:
             shutil.copyfileobj(image.file, file_object)
 
-        cls.resize_image(file_path, user_id)
-        await cls.update_data(user_id, file_path)
+        image_path = cls.resize_image(file_path, user_id)
+        await cls.update_data(user_id, image_path)
 
         return {"message": "Image installed successfully"}
 
@@ -55,6 +55,7 @@ class ImageService:
         with open(image_path, "wb") as file:
             img.save(file, format="WebP", lossless=True, quality=100, method=6)
 
+        return image_path
     @classmethod
     async def update_data(cls, user_id, image_path):
-        await ImageDao.update_data(user_id, image_path=image_path)
+        await ImageDao.update_data(user_id, image_path=image_path[5:])

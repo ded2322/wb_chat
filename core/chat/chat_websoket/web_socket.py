@@ -1,9 +1,12 @@
+from typing import List
+
 from fastapi import WebSocket
+from contextlib import asynccontextmanager
 
 
-class ConnectionManager:
+class WebSocketManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: List[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -15,10 +18,22 @@ class ConnectionManager:
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
-    async def broadcast(self, message: str, sender_websocket: WebSocket = None):
+    async def broadcast(self, message: str, websocket: WebSocket):
         for connection in self.active_connections:
-            if connection != sender_websocket:
+            if connection != websocket:
                 await connection.send_text(message)
 
+    async def broadcast_event(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
 
-manager = ConnectionManager()
+    @asynccontextmanager
+    async def manage_connection(self, websocket: WebSocket):
+        try:
+            await self.connect(websocket)
+            yield
+        finally:
+            self.disconnect(websocket)
+
+
+manager = WebSocketManager()

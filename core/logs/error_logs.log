@@ -1,0 +1,38 @@
+2024-04-18 15:41:02,333 - ERROR - Unknown exc in select_user_info: type object 'Users' has no attribute 'role_id'
+2024-04-18 15:43:33,294 - ERROR - SQLAlchemy exc in insert_data: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.ForeignKeyViolationError'>: INSERT или UPDATE в таблице "messages" нарушает ограничение внешнего ключа "messages_user_id_fkey"
+DETAIL:  Ключ (user_id)=(3) отсутствует в таблице "users".
+[SQL: INSERT INTO messages (user_id, message, time_send) VALUES ($1::INTEGER, $2::VARCHAR, $3::TIME WITHOUT TIME ZONE) RETURNING messages.id]
+[parameters: (3, 'test real-time chat v1.3', datetime.time(15, 43, 33))]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-04-18 15:47:23,897 - ERROR - Unknown exc in show_all_data: type object 'Users' has no attribute 'role_id'
+2024-04-18 16:11:51,483 - ERROR - Error in register_default_user: argon2: no backends available -- recommend you install one (e.g. 'pip install argon2_cffi')
+2024-04-18 16:47:56,512 - ERROR - hash could not be identified
+2024-04-18 16:48:12,159 - ERROR - SQLAlchemy exc in select_user_info: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedFunctionError'>: оператор не существует: integer = character varying
+HINT:  Оператор с данными именем и типами аргументов не найден. Возможно, вам следует добавить явные приведения типов.
+[SQL: SELECT users.id AS user_id, users.name, users.role, images.image_path 
+FROM users LEFT OUTER JOIN images ON users.id = images.user_id 
+WHERE users.id = $1::VARCHAR]
+[parameters: ('9',)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2024-04-18 16:54:20,784 - ERROR - Error in login admin hash could not be identified
+2024-04-18 16:54:29,183 - ERROR - Error in login admin: hash could not be identified
+2024-04-18 17:53:57,220 - ERROR - hash could not be identified
+2024-04-18 18:11:17,797 - ERROR - SQLAlchemy exc in insert_data: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $1: '9' ('str' object cannot be interpreted as an integer)
+[SQL: INSERT INTO messages (user_id, message, time_send) VALUES ($1::INTEGER, $2::VARCHAR, $3::TIME WITHOUT TIME ZONE) RETURNING messages.id]
+[parameters: ('9', 'test real-time chat v1.3', datetime.time(18, 11, 17))]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2024-04-18 18:11:17,800 - ERROR - SQLAlchemy exc in found_data_by_id: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedFunctionError'>: оператор не существует: integer = character varying
+HINT:  Оператор с данными именем и типами аргументов не найден. Возможно, вам следует добавить явные приведения типов.
+[SQL: SELECT users.name 
+FROM users 
+WHERE users.id = $1::VARCHAR]
+[parameters: ('9',)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2024-04-18 18:11:17,801 - ERROR - SQLAlchemy exc in found_data_by_id: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedFunctionError'>: оператор не существует: integer = character varying
+HINT:  Оператор с данными именем и типами аргументов не найден. Возможно, вам следует добавить явные приведения типов.
+[SQL: SELECT images.image_path 
+FROM images 
+WHERE images.user_id = $1::VARCHAR]
+[parameters: ('9',)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2024-04-19 09:54:53,064 - ERROR - hash could not be identified

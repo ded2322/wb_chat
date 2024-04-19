@@ -9,7 +9,6 @@ router = APIRouter(
 )
 
 
-
 @router.post("/upload", status_code=201, summary="Update avatar user")
 async def upload_avatar(token: str, image: UploadFile):
     """

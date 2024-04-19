@@ -1,17 +1,25 @@
 import json
-
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.responses import JSONResponse
 from datetime import datetime
 from pydantic import ValidationError
 
-from core.schemas.message_schemas import WebSocketDataSchema
+from core.schemas.message_schemas import WebSocketDataSchema, MessageUpdateSchema, MessageDeleteSchema
 from core.chat.users.auth import decode_jwt_user_id
 from core.dao.messages_dao.messages_dao import MessagesDao
 from core.dao.users_dao.user_dao import UserDao
 from core.chat.chat_websoket.web_socket import manager
 from core.dao.image_dao.image_dao import ImageDao
 from core.logs.logs import logger_websocket
-from core.schemas.message_schemas import MessageLoadSchema
+from core.schemas.message_schemas import MessageSchema
+
+import time
+
+
+class MessageDecodeJWT:
+    @staticmethod
+    def decode_jwt(jwt_token: str) -> int:
+        return int(decode_jwt_user_id(jwt_token))
 
 
 class MessageService:
@@ -25,89 +33,60 @@ class MessageService:
         return await MessagesDao.show_all_data()
 
     @classmethod
-    async def load_message(cls, id_message: MessageLoadSchema):
+    async def load_message(cls, id_message: MessageSchema):
         """
         Загружает дополнительно 50 сообщений.
         Принимает id последнего сообщения.
         :return: Список словарей
         """
-        return await MessagesDao.load_messages(id_message.id_last_message)
+        return await MessagesDao.load_messages(id_message.id_message)
 
     @classmethod
-    async def create_connect(cls, websocket: WebSocket):
-        import time
-        start = time.time()
-        await manager.connect(websocket)
-        logger_websocket.info(f"User connected")
-
+    async def update_message(cls, user_message_data: MessageUpdateSchema):
+        """
+        Обновляет сообщение пользователя
+        """
         try:
-            while True:
-                data_json = await websocket.receive_text()
+            user_id = MessageDecodeJWT.decode_jwt(user_message_data.token)
+            message_data = await MessagesDao.found_or_none_data(id=user_message_data.message_id)
 
-                try:
-                    websocket_data = WebSocketDataSchema.parse_raw(data_json)
-                except ValidationError as e:
-                    logger_websocket.error(f"Invalid message format: {str(e)}")
-                    continue
+            if not message_data:
+                return JSONResponse(status_code=409, content={"detail": "Message not found"})
+            if not (message_data["user_id"] == user_id):
+                return JSONResponse(status_code=409, content={"detail": "Unauthorized access"})
 
-                # переменные с id пользователем и сообщением пользователя
-                user_id = decode_jwt_user_id(websocket_data.token)
-                user_message = websocket_data.message
+            await MessagesDao.update_data(user_message_data.message_id, message=user_message_data.message)
+            data = {"event": "update", "message_id": user_message_data.message_id,
+                    "new_message": user_message_data.message}
 
-                await cls.process_message(user_id, user_message, websocket)
-
-                end = time.time()
-
-                print(end - start)
-        except (WebSocketDisconnect, Exception) as e:
-            if isinstance(e, WebSocketDisconnect):
-                manager.disconnect(websocket)
-                logger_websocket.info(f"User disconnected")
-            if isinstance(e, Exception):
-                logger_websocket.error(f"Error in create_connect: {str(e)}")
-
-    @classmethod
-    async def process_message(cls, user_id: int, message: str, websocket: WebSocket):
-        try:
-            date_sender = await cls.add_message_db(user_id, message)
-            data_send = await cls.serialization_data(user_id, message, date_sender)
-
-            await manager.send_personal_message(json.dumps(data_send), websocket)
-            data_send["user_side"] = False
-            await manager.broadcast(json.dumps(data_send), websocket)
-
+            await manager.broadcast_event(json.dumps(data))
+            return {"message": "message updated successfully"}
         except Exception as e:
-            logger_websocket.error(f"Error processing message: {str(e)}")
+            logger_websocket.error(f"Error in update_message: {str(e)}")
 
-    @staticmethod
-    async def add_message_db(user_id: int, message: str):
+    @classmethod
+    async def delete_message(cls, message: MessageDeleteSchema):
         """
-        Добавляет данные в базу данных.
-        Возвращает время когда было отправлено сообщение
+        Удаляет сообщение пользователя
         """
-        current_time = datetime.now().time()
+        try:
+            user_id = MessageDecodeJWT.decode_jwt(message.token)
+            user_data = await UserDao.found_or_none_data(id=user_id)
 
-        formatted_time = current_time.strftime("%H:%M:%S")
-        time_object = datetime.strptime(formatted_time, '%H:%M:%S').time()
+            if user_data["role"] < 2:
+                return JSONResponse(status_code=409, content={"detail": "Unauthorized access"})
 
-        # Добавляем в базу данных сообщение
-        await MessagesDao.insert_data(user_id=user_id, message=message,
-                                      time_send=time_object)
-        return formatted_time
+            message_data = await MessagesDao.found_or_none_data(id=message.id_message)
 
-    @staticmethod
-    async def serialization_data(user_id: int, message: str, date_send):
-        """
-        Сериализует данные в json.
-        Возвращает json с ником, изображение, сообщением, датой отправки, ?с какой стороны сообщение?
-        """
-        data_user = await UserDao.found_data_by_column("name", id=user_id)
-        file_path = await ImageDao.found_data_by_column("image_path", user_id=user_id)
+            if not message_data:
+                return JSONResponse(status_code=409, content={"detail": "Message not found"})
 
-        data = {"name": data_user["name"],
-                "image": file_path["image_path"],
-                "message": message,
-                "time_send": date_send,
-                "user_side": True}
+            await MessagesDao.delete_data(id=message.id_message)
 
-        return data
+            data = {"event": "delete", "message_id": message.id_message}
+
+            await manager.broadcast_event(json.dumps(data))
+
+            return {"message": "message deleted successfully"}
+        except Exception as e:
+            logger_websocket.error(f"Error in delete_message: {str(e)}")
