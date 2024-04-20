@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, delete, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.database import async_session_maker
@@ -46,7 +46,6 @@ class BaseDao:
                     logger_error.error(f"SQLAlchemy exc in found or none: {str(e)}")
                 else:
                     logger_error.error(f"Unknown exc in found or none: {str(e)}")
-
 
     @classmethod
     async def found_data_by_column(cls, column, **kwargs):
@@ -105,9 +104,7 @@ class BaseDao:
                 UPDATE csl.model
                 SET column = new_data;
                 """
-                query = (update(cls.model).
-                         where(cls.model.id == id).
-                         values(**kwargs))
+                query = update(cls.model).where(cls.model.id == id).values(**kwargs)
                 await session.execute(query)
                 await session.commit()
             except (SQLAlchemyError, Exception) as e:

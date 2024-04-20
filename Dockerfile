@@ -12,6 +12,8 @@ COPY . .
 RUN mkdir -p /core/static/original_images
 RUN mkdir -p /core/static/image_default
 RUN mkdir -p /core/static/resize_images
+RUN mkdir -p /core/logs/
+
 COPY core/static /core/static
 
 EXPOSE 8000

@@ -2,10 +2,7 @@ from fastapi import APIRouter, WebSocket
 
 from core.dao.websocket_service.web_socket_service import WebsocketService
 
-router = APIRouter(
-    prefix="",
-    tags=["Websocket"]
-)
+router = APIRouter(prefix="", tags=["Websocket"])
 
 
 @router.websocket("/ws")

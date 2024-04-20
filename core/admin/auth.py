@@ -1,9 +1,11 @@
 from typing import Union
+
 from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
-from starlette.responses import Response, RedirectResponse, JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse, Response
 
-from core.chat.users.auth import verification_password, create_access_token, decode_jwt_user_id
+from core.chat.users.auth import (create_access_token, decode_jwt_user_id,
+                                  verification_password)
 from core.dao.users_dao.user_dao import UserDao
 from core.logs.logs import logger_error
 
@@ -17,7 +19,9 @@ class AdminAuth(AuthenticationBackend):
 
             user = await UserDao.found_or_none_data(name=name)
             if not user or not verification_password(password, user["password"]):
-                return JSONResponse(status_code=409, content={"detail": "Invalid credentials"})
+                return JSONResponse(
+                    status_code=409, content={"detail": "Invalid credentials"}
+                )
             if user["role"] < 3:
                 return JSONResponse(status_code=409, content={"detail": "No access"})
 

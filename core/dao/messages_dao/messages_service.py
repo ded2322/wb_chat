@@ -1,19 +1,20 @@
 import json
-from fastapi import WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.responses import JSONResponse
+import time
 from datetime import datetime
+
+from fastapi import HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from core.schemas.message_schemas import WebSocketDataSchema, MessageUpdateSchema, MessageDeleteSchema
+from core.chat.chat_websoket.web_socket import manager
 from core.chat.users.auth import decode_jwt_user_id
+from core.dao.image_dao.image_dao import ImageDao
 from core.dao.messages_dao.messages_dao import MessagesDao
 from core.dao.users_dao.user_dao import UserDao
-from core.chat.chat_websoket.web_socket import manager
-from core.dao.image_dao.image_dao import ImageDao
 from core.logs.logs import logger_websocket
-from core.schemas.message_schemas import MessageSchema
-
-import time
+from core.schemas.message_schemas import (MessageDeleteSchema, MessageSchema,
+                                          MessageUpdateSchema,
+                                          WebSocketDataSchema)
 
 
 class MessageDecodeJWT:
@@ -48,16 +49,27 @@ class MessageService:
         """
         try:
             user_id = MessageDecodeJWT.decode_jwt(user_message_data.token)
-            message_data = await MessagesDao.found_or_none_data(id=user_message_data.message_id)
+            message_data = await MessagesDao.found_or_none_data(
+                id=user_message_data.message_id
+            )
 
             if not message_data:
-                return JSONResponse(status_code=409, content={"detail": "Message not found"})
+                return JSONResponse(
+                    status_code=409, content={"detail": "Message not found"}
+                )
             if not (message_data["user_id"] == user_id):
-                return JSONResponse(status_code=409, content={"detail": "Unauthorized access"})
+                return JSONResponse(
+                    status_code=409, content={"detail": "Unauthorized access"}
+                )
 
-            await MessagesDao.update_data(user_message_data.message_id, message=user_message_data.message)
-            data = {"event": "update", "message_id": user_message_data.message_id,
-                    "new_message": user_message_data.message}
+            await MessagesDao.update_data(
+                user_message_data.message_id, message=user_message_data.message
+            )
+            data = {
+                "event": "update",
+                "message_id": user_message_data.message_id,
+                "new_message": user_message_data.message,
+            }
 
             await manager.broadcast_event(json.dumps(data))
             return {"message": "message updated successfully"}
@@ -74,12 +86,16 @@ class MessageService:
             user_data = await UserDao.found_or_none_data(id=user_id)
 
             if user_data["role"] < 2:
-                return JSONResponse(status_code=409, content={"detail": "Unauthorized access"})
+                return JSONResponse(
+                    status_code=409, content={"detail": "Unauthorized access"}
+                )
 
             message_data = await MessagesDao.found_or_none_data(id=message.id_message)
 
             if not message_data:
-                return JSONResponse(status_code=409, content={"detail": "Message not found"})
+                return JSONResponse(
+                    status_code=409, content={"detail": "Message not found"}
+                )
 
             await MessagesDao.delete_data(id=message.id_message)
 

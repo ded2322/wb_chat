@@ -1,7 +1,7 @@
+from contextlib import asynccontextmanager
 from typing import List
 
 from fastapi import WebSocket
-from contextlib import asynccontextmanager
 
 
 class WebSocketManager:

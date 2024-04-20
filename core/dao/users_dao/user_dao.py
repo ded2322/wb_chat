@@ -1,11 +1,11 @@
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from core.database import async_session_maker
 from core.dao.base import BaseDao
-from core.models.users_models import Users
-from core.models.image_models import Image
+from core.database import async_session_maker
 from core.logs.logs import logger_error
+from core.models.image_models import Image
+from core.models.users_models import Users
 
 
 class UserDao(BaseDao):
@@ -23,12 +23,17 @@ class UserDao(BaseDao):
                 SELECT users.name, users.password, images.image_path FROM users
                 LEFT JOIN images on users.id = images.user_id
                 """
-                query = (select(cls.model.id.label("user_id"), cls.model.name, cls.model.role,
-                                Image.image_path)
-                         .select_from(cls.model)
-                         .join(Image, cls.model.id == Image.user_id, isouter=True)
-                         .where(cls.model.id == user_id)
-                         )
+                query = (
+                    select(
+                        cls.model.id.label("user_id"),
+                        cls.model.name,
+                        cls.model.role,
+                        Image.image_path,
+                    )
+                    .select_from(cls.model)
+                    .join(Image, cls.model.id == Image.user_id, isouter=True)
+                    .where(cls.model.id == user_id)
+                )
                 result = await session.execute(query)
                 return result.mappings().one_or_none()
             except (SQLAlchemyError, Exception) as e:

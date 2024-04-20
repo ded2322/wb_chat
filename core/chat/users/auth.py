@@ -1,7 +1,7 @@
-from jose import ExpiredSignatureError, JWTError, jwt
-from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
 
+from fastapi.responses import JSONResponse
+from jose import ExpiredSignatureError, JWTError, jwt
 from jwt import DecodeError
 from passlib.context import CryptContext
 
@@ -34,6 +34,10 @@ def decode_jwt_user_id(token: str) -> str | JSONResponse:
         return payload.get("sub")
     except (ExpiredSignatureError, JWTError) as e:
         if isinstance(e, ExpiredSignatureError):
-            return JSONResponse(status_code=401, content={"detail": "The access token has expired"})
+            return JSONResponse(
+                status_code=401, content={"detail": "The access token has expired"}
+            )
         if isinstance(e, JWTError):
-            return JSONResponse(status_code=401, content={"detail": "Invalid access token format"})
+            return JSONResponse(
+                status_code=401, content={"detail": "Invalid access token format"}
+            )

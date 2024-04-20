@@ -1,18 +1,17 @@
 import json
-from fastapi import WebSocket, WebSocketDisconnect, HTTPException
+import time
 from datetime import datetime
+
+from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
-from core.schemas.message_schemas import WebSocketDataSchema
+from core.chat.chat_websoket.web_socket import manager
 from core.chat.users.auth import decode_jwt_user_id
+from core.dao.image_dao.image_dao import ImageDao
 from core.dao.messages_dao.messages_dao import MessagesDao
 from core.dao.users_dao.user_dao import UserDao
-from core.chat.chat_websoket.web_socket import manager
-from core.dao.image_dao.image_dao import ImageDao
 from core.logs.logs import logger_websocket
-
-
-import time
+from core.schemas.message_schemas import WebSocketDataSchema
 
 
 class WebsocketDecodeJWT:
@@ -31,12 +30,14 @@ class WebsocketSerializer:
         data_user = await UserDao.found_or_none_data(id=user_id)
         file_path = await ImageDao.found_data_by_column("image_path", user_id=user_id)
 
-        data = {"role": data_user["role"],
-                "name": data_user["name"],
-                "image": file_path["image_path"],
-                "message": message,
-                "time_send": date_send,
-                "user_side": True}
+        data = {
+            "role": data_user["role"],
+            "name": data_user["name"],
+            "image": file_path["image_path"],
+            "message": message,
+            "time_send": date_send,
+            "user_side": True,
+        }
 
         return data
 
@@ -51,11 +52,12 @@ class WebsocketMessageAddDB:
         current_time = datetime.now().time()
 
         formatted_time = current_time.strftime("%H:%M:%S")
-        time_object = datetime.strptime(formatted_time, '%H:%M:%S').time()
+        time_object = datetime.strptime(formatted_time, "%H:%M:%S").time()
 
         # Добавляем в базу данных сообщение
-        await MessagesDao.insert_data(user_id=user_id, message=message,
-                                      time_send=time_object)
+        await MessagesDao.insert_data(
+            user_id=user_id, message=message, time_send=time_object
+        )
         return formatted_time
 
 
@@ -99,7 +101,9 @@ class WebsocketService:
         """
         try:
             date_sender = await WebsocketMessageAddDB.add_message_db(user_id, message)
-            data_send = await WebsocketSerializer.serialize_message(user_id, message, date_sender)
+            data_send = await WebsocketSerializer.serialize_message(
+                user_id, message, date_sender
+            )
 
             # Проверяем, что соединение все еще активно перед отправкой сообщения
             if websocket.client_state.name == "CONNECTED":
@@ -112,4 +116,3 @@ class WebsocketService:
         except Exception as e:
             logger_websocket.error(f"Error processing message: {str(e)}")
             raise HTTPException(status_code=400, detail=str(e))
-

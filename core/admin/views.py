@@ -1,7 +1,8 @@
 from sqladmin import ModelView
-from core.models.users_models import Users
-from core.models.messages_models import Messages
+
 from core.models.image_models import Image
+from core.models.messages_models import Messages
+from core.models.users_models import Users
 
 
 class UserAdmin(ModelView, model=Users):
@@ -17,4 +18,3 @@ class MessagesAdmin(ModelView, model=Messages):
     name = "Сообщение"
     name_plural = "Сообщения"
     icon = "fa-solid fa-message"
-

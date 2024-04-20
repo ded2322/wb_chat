@@ -1,12 +1,12 @@
-from sqlalchemy import select, desc
+from sqlalchemy import desc, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from core.database import async_session_maker
 from core.dao.base import BaseDao
-from core.models.messages_models import Messages
-from core.models.image_models import Image
-from core.models.users_models import Users
+from core.database import async_session_maker
 from core.logs.logs import logger_error
+from core.models.image_models import Image
+from core.models.messages_models import Messages
+from core.models.users_models import Users
 
 
 class MessagesDao(BaseDao):
@@ -26,14 +26,22 @@ class MessagesDao(BaseDao):
             LIMIT 50
             """
             try:
-                query = (select(cls.model.id.label("message_id"), cls.model.message, cls.model.time_send,
-                                Image.image_path,
-                                Users.id.label("user_id"), Users.name, Users.role)
-                         .select_from(cls.model)
-                         .join(Users, cls.model.user_id == Users.id, isouter=True)
-                         .join(Image, cls.model.user_id == Image.user_id, isouter=True)
-                         .order_by(desc(cls.model.id))
-                         .limit(50))
+                query = (
+                    select(
+                        cls.model.id.label("message_id"),
+                        cls.model.message,
+                        cls.model.time_send,
+                        Image.image_path,
+                        Users.id.label("user_id"),
+                        Users.name,
+                        Users.role,
+                    )
+                    .select_from(cls.model)
+                    .join(Users, cls.model.user_id == Users.id, isouter=True)
+                    .join(Image, cls.model.user_id == Image.user_id, isouter=True)
+                    .order_by(desc(cls.model.id))
+                    .limit(50)
+                )
                 result = await session.execute(query)
                 return result.mappings().all()
             except (SQLAlchemyError, Exception) as e:
@@ -59,15 +67,22 @@ class MessagesDao(BaseDao):
             LIMIT 50;
             """
             try:
-                query = (select(cls.model.id, cls.model.message, cls.model.time_send,
-                                Image.image_path,
-                                Users.name, Users.role)
-                         .select_from(cls.model)
-                         .join(Users, cls.model.user_id == Users.id, isouter=True)
-                         .join(Image, cls.model.user_id == Image.user_id, isouter=True)
-                         .where(cls.model.id < message_id)
-                         .order_by(desc(cls.model.id))
-                         .limit(50))
+                query = (
+                    select(
+                        cls.model.id,
+                        cls.model.message,
+                        cls.model.time_send,
+                        Image.image_path,
+                        Users.name,
+                        Users.role,
+                    )
+                    .select_from(cls.model)
+                    .join(Users, cls.model.user_id == Users.id, isouter=True)
+                    .join(Image, cls.model.user_id == Image.user_id, isouter=True)
+                    .where(cls.model.id < message_id)
+                    .order_by(desc(cls.model.id))
+                    .limit(50)
+                )
                 result = await session.execute(query)
                 return result.mappings().all()
 

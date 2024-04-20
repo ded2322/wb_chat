@@ -1,12 +1,10 @@
 from fastapi import APIRouter, WebSocket
+
 from core.dao.messages_dao.messages_service import MessageService
-from core.schemas.message_schemas import MessageSchema, MessageDeleteSchema, MessageUpdateSchema
+from core.schemas.message_schemas import (MessageDeleteSchema, MessageSchema,
+                                          MessageUpdateSchema)
 
-
-router = APIRouter(
-    prefix="/chat",
-    tags=["Chat"]
-)
+router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
 @router.get("/last_messages", status_code=200, summary="Get last 50 messages")

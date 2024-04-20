@@ -8,7 +8,7 @@ def setup_logger(logger_name, log_file, level=logging.INFO):
 
     # Создание обработчика для сохранения логов в файл
     file_handler = logging.FileHandler(log_file)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
@@ -21,10 +21,10 @@ def setup_logger(logger_name, log_file, level=logging.INFO):
 
 
 # Настройка логгера для ошибок
-logger_error = setup_logger("error_logger", "core/logs/error_logs.log")
+logger_error = setup_logger("error_logger", "/core/logs/error_logs.log")
 
 # Настройка логгера для ответов
-logger_response = setup_logger("response_logger", "core/logs/response_logs.log")
+logger_response = setup_logger("response_logger", "/core/logs/response_logs.log")
 
 # Настройка логгера для вебсокета
-logger_websocket = setup_logger("websocket_logger", "core/logs/websocket_logs.log")
+logger_websocket = setup_logger("websocket_logger", "/core/logs/websocket_logs.log")

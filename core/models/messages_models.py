@@ -1,5 +1,6 @@
+from sqlalchemy import TIME, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, TIME
+
 from core.database import Base
 
 

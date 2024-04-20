@@ -1,18 +1,14 @@
 from fastapi import APIRouter
 
-from core.schemas.users_schemas import UserDataRegisterSchema, UserDataLoginSchema, UserUpdateDataSchema, JWTTokenSchema
 from core.dao.users_dao.user_service import UserService
 from core.logs.logs import logger_response
+from core.schemas.users_schemas import (JWTTokenSchema, UserDataLoginSchema,
+                                        UserDataRegisterSchema,
+                                        UserUpdateDataSchema)
 
-router_auth = APIRouter(
-    prefix="/auth",
-    tags=["Auth"]
-)
+router_auth = APIRouter(prefix="/auth", tags=["Auth"])
 
-router_user = APIRouter(
-    prefix="/user",
-    tags=["User"]
-)
+router_user = APIRouter(prefix="/user", tags=["User"])
 
 
 @router_auth.post("/register-admin", status_code=201, summary="Register admin")
@@ -23,7 +19,7 @@ async def register_admin(data_user: UserDataRegisterSchema):
     :return:
     """
     logger_response.info("Register admin")
-    return await UserService.register_user(data_user)
+    return await UserService.register_user(data_user, default_user=False)
 
 
 @router_auth.post("/register-user", status_code=201, summary="Register user")
@@ -70,7 +66,9 @@ async def login_user(data_user: UserDataLoginSchema):
 
 
 @router_user.patch("/update", status_code=201, summary="Update data user")
-async def update_data_user(jwt_token: JWTTokenSchema, data_update: UserUpdateDataSchema):
+async def update_data_user(
+    jwt_token: JWTTokenSchema, data_update: UserUpdateDataSchema
+):
     """
     Обновляет данные пользователя, все поля опциональным
     :param: Для успешного обновления нужно передать jwt token
