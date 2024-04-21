@@ -15,8 +15,7 @@ from core.database import engine
 
 app = FastAPI(title="Real-time chat", version="1.3")
 
-app.mount("/static", StaticFiles(directory="core/static"), "static")
-
+app.mount("/static", StaticFiles(directory="/core/static"), "static")
 # todo картинка удаленного пользователя, картинка на вкладку
 
 # alembic revision --autogenerate -m "init"  alembic upgrade head

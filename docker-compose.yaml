@@ -1,5 +1,16 @@
 version: "3.8"
 
+volumes:
+  postgres:
+  grafanadata:
+  prometheusdata:
+  core-static:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: './core/static/'
+
 services:
   db:
       image: postgres:16
@@ -12,7 +23,6 @@ services:
 
 
   chat_service:
-    image: chat_app
     build:
       context: .
       dockerfile: Dockerfile
@@ -24,7 +34,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./core/static:/core/static
+      - core-static:/core/static/
       - ./core/logs:/core/logs
 
 
@@ -47,8 +57,3 @@ services:
      restart: unless-stopped
      ports:
        - 3000:3000
-
-volumes:
-  postgres:
-  grafanadata:
-  prometheusdata:

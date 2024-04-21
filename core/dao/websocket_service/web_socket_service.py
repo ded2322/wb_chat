@@ -80,7 +80,7 @@ class WebsocketService:
                         websocket_data = WebSocketDataSchema.parse_raw(data_json)
                     except ValidationError as e:
                         logger_websocket.error(f"Invalid message format: {str(e)}")
-                        continue
+                        return
 
                     user_id = WebsocketDecodeJWT.decode_jwt(websocket_data.token)
                     message_input = websocket_data.message
