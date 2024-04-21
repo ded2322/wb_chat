@@ -33,7 +33,7 @@ class WebsocketSerializer:
         data = {
             "role": data_user["role"],
             "name": data_user["name"],
-            "image": file_path["image_path"],
+            "user_avatar": file_path["image_path"],
             "message": message,
             "time_send": date_send,
             "user_side": True,

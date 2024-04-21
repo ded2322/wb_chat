@@ -31,7 +31,7 @@ class MessagesDao(BaseDao):
                         cls.model.id.label("message_id"),
                         cls.model.message,
                         cls.model.time_send,
-                        Image.image_path,
+                        Image.image_path.label("user_avatar"),
                         Users.id.label("user_id"),
                         Users.name,
                         Users.role,
@@ -69,10 +69,11 @@ class MessagesDao(BaseDao):
             try:
                 query = (
                     select(
-                        cls.model.id,
+                        cls.model.id.label("message_id"),
                         cls.model.message,
                         cls.model.time_send,
-                        Image.image_path,
+                        Image.image_path.label("user_avatar"),
+                        Users.id.label("user_id"),
                         Users.name,
                         Users.role,
                     )
