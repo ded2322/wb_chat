@@ -16,6 +16,7 @@ from core.database import engine
 app = FastAPI(title="Real-time chat", version="1.3")
 
 app.mount("/static", StaticFiles(directory="/core/static"), "static")
+
 # todo картинка удаленного пользователя, картинка на вкладку
 
 # alembic revision --autogenerate -m "init"  alembic upgrade head
@@ -25,6 +26,7 @@ DB_PASS=root
 DB_NAME=App
 DB_HOST=localhost
 DB_PORT=5432
+
 """
 
 app.include_router(auth_router)

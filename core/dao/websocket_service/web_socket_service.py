@@ -2,7 +2,7 @@ import json
 import time
 from datetime import datetime
 
-from fastapi import HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
 from core.chat.chat_websoket.web_socket import manager
@@ -17,7 +17,10 @@ from core.schemas.message_schemas import WebSocketDataSchema
 class WebsocketDecodeJWT:
     @staticmethod
     def decode_jwt(jwt_token: str) -> int:
-        return int(decode_jwt_user_id(jwt_token))
+        try:
+            return int(decode_jwt_user_id(jwt_token))
+        except BaseException:
+            logger_websocket.error(f"Error in decode_jwt: invalid type")
 
 
 class WebsocketSerializer:
@@ -66,8 +69,6 @@ class WebsocketService:
     async def create_connect(cls, websocket: WebSocket):
         """
         Создает коннект с сокетом
-        :param websocket:
-        :return:
         """
         async with manager.manage_connection(websocket):
             start = time.time()
@@ -76,19 +77,26 @@ class WebsocketService:
             try:
                 while True:
                     data_json = await websocket.receive_text()
+                    #
                     try:
                         websocket_data = WebSocketDataSchema.parse_raw(data_json)
                     except ValidationError as e:
                         logger_websocket.error(f"Invalid message format: {str(e)}")
-                        return
-
+                        await cls.send_user_message("Invalid format", websocket)
+                        await websocket.close()
+                    #
                     user_id = WebsocketDecodeJWT.decode_jwt(websocket_data.token)
+                    if not user_id:
+                        await cls.send_user_message("Invalid token", websocket)
+                        break
+                    #
                     message_input = websocket_data.message
-
+                    #
                     await cls.process_message(user_id, message_input, websocket)
 
                     end = time.time()
                     print(end - start)
+
             except WebSocketDisconnect:
                 logger_websocket.info("User disconnected")
             except Exception as e:
@@ -114,5 +122,12 @@ class WebsocketService:
                 logger_websocket.warning("Skipped sending message to closed connection")
 
         except Exception as e:
-            logger_websocket.error(f"Error processing message: {str(e)}")
-            raise HTTPException(status_code=400, detail=str(e))
+            logger_websocket.error(f"Error in processing message: {str(e)}")
+
+    @classmethod
+    async def send_user_message(cls, message: str, websocket: WebSocket):
+
+        data_send = {"event": "send user message", "message": message}
+        if websocket.client_state.name == "CONNECTED":
+            await manager.send_personal_message(json.dumps(data_send), websocket)
+            await websocket.close()

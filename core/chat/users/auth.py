@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 from fastapi.responses import JSONResponse
 from jose import ExpiredSignatureError, JWTError, jwt
-from jwt import DecodeError
 from passlib.context import CryptContext
 
 from core.config import settings

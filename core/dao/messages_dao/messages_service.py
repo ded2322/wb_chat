@@ -1,20 +1,15 @@
 import json
-import time
-from datetime import datetime
 
-from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
-from pydantic import ValidationError
+
 
 from core.chat.chat_websoket.web_socket import manager
 from core.chat.users.auth import decode_jwt_user_id
-from core.dao.image_dao.image_dao import ImageDao
 from core.dao.messages_dao.messages_dao import MessagesDao
 from core.dao.users_dao.user_dao import UserDao
 from core.logs.logs import logger_websocket
 from core.schemas.message_schemas import (MessageDeleteSchema, MessageSchema,
-                                          MessageUpdateSchema,
-                                          WebSocketDataSchema)
+                                          MessageUpdateSchema)
 
 
 class MessageDecodeJWT:
