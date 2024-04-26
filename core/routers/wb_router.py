@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket
 
-from core.dao.websocket_service.web_socket_service import WebsocketService
+from core.layers.chat_layer import WebsocketService
 
 router = APIRouter(prefix="", tags=["Websocket"])
 

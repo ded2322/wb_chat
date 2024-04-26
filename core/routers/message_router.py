@@ -1,10 +1,10 @@
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter
 
-from core.dao.messages_dao.messages_service import MessageService
+from core.layers.messages_layer import MessageLayer
 from core.schemas.message_schemas import (MessageDeleteSchema, MessageSchema,
                                           MessageUpdateSchema)
 
-router = APIRouter(prefix="/chat", tags=["Chat"])
+router = APIRouter(prefix="/routers", tags=["Chat"])
 
 
 @router.get("/last_messages", status_code=200, summary="Get last 50 messages")
@@ -13,7 +13,7 @@ async def get_last_messages():
     Отдает последние 50 сообщений пользователя
     :return: json формата [{}, {}]
     """
-    return await MessageService.show_messages_data()
+    return await MessageLayer.show_messages_data()
 
 
 @router.post("/load", status_code=200, summary="Load additional message")
@@ -23,7 +23,7 @@ async def load_message(id_message: MessageSchema):
     Нужно передать id последнего сообщения
     :return: json формата [{}, {}]
     """
-    return await MessageService.load_message(id_message)
+    return await MessageLayer.load_message(id_message)
 
 
 @router.patch("/update", status_code=201, summary="Update message user")
@@ -35,7 +35,7 @@ async def update_message(message_data: MessageUpdateSchema):
     Возвращает словарь с сообщением. При успешном обновлении 201 статус код
     """
 
-    return await MessageService.update_message(message_data)
+    return await MessageLayer.update_message(message_data)
 
 
 @router.delete("/delete-message", status_code=201, summary="Delete message user")
@@ -46,4 +46,4 @@ async def delete_message(message_data: MessageDeleteSchema):
     :return: По вебсокету отправляется event с сообщением.
     Возвращает словарь с сообщением. При успешном обновлении 201 статус код
     """
-    return await MessageService.delete_message(message_data)
+    return await MessageLayer.delete_message(message_data)

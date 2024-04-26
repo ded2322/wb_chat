@@ -5,7 +5,7 @@ from core.database import async_session_maker
 from core.logs.logs import logger_error
 
 
-class BaseDao:
+class BaseOrm:
     model = None
 
     @classmethod
@@ -28,7 +28,7 @@ class BaseDao:
                     logger_error.error(f"Unknown exc in show database: {str(e)}")
 
     @classmethod
-    async def found_or_none_data(cls, **kwargs):
+    async def found_one_or_none(cls, **kwargs):
         """
         Находит строку в таблице, отдает в виде словаря
         """

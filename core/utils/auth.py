@@ -40,3 +40,9 @@ def decode_jwt_user_id(token: str) -> str | JSONResponse:
             return JSONResponse(
                 status_code=401, content={"detail": "Invalid access token format"}
             )
+
+
+class DecodeJWT:
+    @staticmethod
+    def decode_jwt(jwt_token: str) -> int:
+        return int(decode_jwt_user_id(jwt_token))

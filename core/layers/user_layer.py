@@ -2,23 +2,108 @@ import random
 
 from fastapi.responses import JSONResponse
 
-from core.chat.users.auth import (create_access_token, decode_jwt_user_id,
-                                  get_password_hash, verification_password)
-from core.dao.image_dao.image_dao import ImageDao
-from core.dao.users_dao.user_dao import UserDao
+from core.utils.auth import (create_access_token, DecodeJWT,
+                             get_password_hash, verification_password)
+from core.orm.image_orm import ImageOrm
+from core.orm.user_orm import UserOrm
 from core.logs.logs import logger_error
 from core.schemas.users_schemas import (JWTTokenSchema, UserDataLoginSchema,
                                         UserDataRegisterSchema,
                                         UserUpdateDataSchema)
 
 
-class UserService:
+class UserCheck:
+    @classmethod
+    async def check_username_exists(cls, **kwargs):
+        user_data = await UserOrm.found_one_or_none(**kwargs)
+
+        if user_data:
+            return True
+
+        return False
+
+    @classmethod
+    async def get_user_info(cls, **kwargs) -> dict | bool:
+        """
+        Возвращает информацию о пользователе по заданным критериям
+        """
+        user_data = await UserOrm.found_one_or_none(**kwargs)
+        if not user_data:
+            return False
+        return user_data
+
+
+class UserAvatar:
+    @classmethod
+    async def avatar_user(cls, name: str):
+        """
+        Случайно выбирает аватар пользователю.
+        Создает запись в таблице, с id пользователя и путем до изображения
+        """
+
+        try:
+            user_info = await UserOrm.found_data_by_column("id", name=name)
+            image_path = cls.get_random_avatar()
+            await ImageOrm.insert_data(user_id=user_info["id"], image_path=image_path)
+        except Exception as e:
+            logger_error.error(f"Error in avatar_user: {str(e)}")
+
+    @staticmethod
+    def get_random_avatar():
+        """
+        Возвращает случайный путь к аватару.
+        """
+        list_avatar = list(range(1, 20))
+
+        number_avatar = random.choice(list_avatar)
+        image_path = f"/static/image_default/image_default_{number_avatar}.webp"
+        return image_path
+
+
+class UserValidator:
+    @classmethod
+    async def register_user_validator(cls,
+                                      data_user: UserDataRegisterSchema, default_user: bool = True
+                                      ):
+
+        # Ищет, есть ли пользователи с таким же именем
+        if await UserCheck.check_username_exists(name=data_user.name):
+            return JSONResponse(status_code=409, content={"detail": "Name is occupied"})
+
+        if (data_user.role < 1) or (data_user.role > 3):
+            return JSONResponse(status_code=409, content={"detail": "Invalid role"})
+
+        if default_user and data_user.role > 1:
+            return JSONResponse(status_code=409, content={"detail": "Invalid role"})
+        return False
+
+    @classmethod
+    async def login_user_validator(cls, user, data_user: UserDataLoginSchema):
+        # Проверяет валидность имени и пароля
+
+        if not user or not verification_password(
+                data_user.password, user["password"]
+        ):
+            return True
+        return False
+
+    @classmethod
+    def update_data_user_validator(cls, user_data):
+        if not user_data:
+            return JSONResponse(
+                status_code=409, content={"detail": "User not found"}
+            )
+
+        return False
+
+
+class UserLayer:
     @classmethod
     async def show_all_users(cls):
         """
         Возвращает всех пользователей. В виде списка словарей
         """
-        return await UserDao.show_all_data()
+        return await UserOrm.show_all_data()
 
     @classmethod
     async def user_info(cls, jwt_token: JWTTokenSchema):
@@ -28,21 +113,17 @@ class UserService:
         """
         try:
             # Ищет информацию по пользователю
-            user_info = await UserDao.select_user_info(
-                int(decode_jwt_user_id(jwt_token.token))
-            )
+            user_info = await UserOrm.user_info(DecodeJWT.decode_jwt(jwt_token.token))
             # Если пользователя нет, отдает ошибку
             if not user_info:
-                return JSONResponse(
-                    status_code=409, content={"detail": "User not found"}
-                )
+                return JSONResponse(status_code=409, content={"detail": "User not found"})
             return user_info
         except Exception as e:
             logger_error.error(f"Error in user_info: {str(e)}")
 
     @classmethod
     async def register_user(
-        cls, data_user: UserDataRegisterSchema, default_user: bool = True
+            cls, data_user: UserDataRegisterSchema, default_user: bool = True
     ):
         """
         Регистрирует пользователя.
@@ -50,32 +131,20 @@ class UserService:
         При регистрации случайным образом присваиваются изображения
         """
         try:
-            # Ищет, есть ли пользователи с таким же именем
-            if await UserDao.found_or_none_data(name=data_user.name):
-                return JSONResponse(
-                    status_code=409, content={"detail": "Name is occupied"}
-                )
+            validator = await UserValidator.register_user_validator(data_user, default_user)
+            if validator:
+                return validator
+
             # Хеширует пароль
             hash_password = get_password_hash(data_user.password)
 
-            if (data_user.role < 1) or (data_user.role > 3):
-                return JSONResponse(status_code=409, content={"detail": "Invalid role"})
-
-            if default_user:
-                if data_user.role > 1:
-                    return JSONResponse(
-                        status_code=409, content={"detail": "Invalid role"}
-                    )
-
             # Добавляет данные в таблицу
-            await UserDao.insert_data(
-                name=data_user.name, password=hash_password, role=data_user.role
-            )
+            await UserOrm.insert_data(name=data_user.name, password=hash_password, role=data_user.role)
+
             # Присваивает аватар пользователю
-            await cls.avatar_user(data_user.name)
+            await UserAvatar.avatar_user(data_user.name)
 
             return {"message": "User registered successfully"}
-
         except Exception as e:
             logger_error.error(f"Error in register_default_user: {str(e)}")
 
@@ -86,26 +155,23 @@ class UserService:
         Возвращает токен в словаре.
         """
         try:
-            # Проверяет валидность имени и пароля
-            user = await UserDao.found_or_none_data(name=data_user.name)
-            if not user or not verification_password(
-                data_user.password, user["password"]
-            ):
-                return JSONResponse(
-                    status_code=409, content={"detail": "Invalid credentials"}
-                )
+            # проверка есть ли пользователь в бд
+            user = await UserCheck.get_user_info(name=data_user.name)
+            # проверка пароля
+            if await UserValidator.login_user_validator(user, data_user):
+                return JSONResponse(status_code=409, content={"detail": "Invalid credentials"})
 
             # Создается токен доступа
-            jwt_token = create_access_token({"sub": str(user.id)})
+            jwt_token = create_access_token({"sub": str(user["id"])})
 
             return {"token": jwt_token}
 
         except Exception as e:
-            logger_error.error(str(e))
+            logger_error.error(f"Error in login_user: {str(e)}")
 
     @classmethod
     async def update_data_user(
-        cls, data_update: UserUpdateDataSchema, jwt_token: JWTTokenSchema
+            cls, data_update: UserUpdateDataSchema, jwt_token: JWTTokenSchema
     ):
         """
         Обновляет данные пользователя на основе предоставленной информации.
@@ -116,23 +182,19 @@ class UserService:
         """
         try:
             # Получаем данные пользователя на основе расшифрованного идентификатора пользователя из токена JWT
-            user_data = await UserDao.found_or_none_data(
-                id=int(decode_jwt_user_id(jwt_token.token))
-            )
+            user_data = await UserCheck.get_user_info(id=DecodeJWT.decode_jwt(jwt_token.token))
 
             # Если данные пользователя не найдены, возвращаем JSON-ответ с сообщением об ошибке
-            if not user_data:
-                return JSONResponse(
-                    status_code=409, content={"detail": "User not found"}
-                )
+            data_validator = UserValidator.update_data_user_validator(user_data)
+            if data_validator:
+                return data_validator
 
             # Создаем словарь для хранения обновляемых полей и их значений
             update_fields = {}
 
-            # Если предоставлено новое имя пользователя
+            #  Если предоставлено новое имя
             if data_update.name:
-                # Проверяем, занято ли уже такое имя другим пользователем
-                if await UserDao.found_or_none_data(name=data_update.name):
+                if await UserOrm.found_one_or_none(name=data_update.name):
                     return JSONResponse(
                         status_code=409, content={"detail": "Name is occupied"}
                     )
@@ -141,15 +203,12 @@ class UserService:
 
             # Если предоставлен новый пароль
             if data_update.password:
-                # Хешируем новый пароль
                 hash_password = get_password_hash(data_update.password)
-                # Добавляем хешированный пароль в словарь обновляемых полей
                 update_fields["password"] = hash_password
 
             # Если есть обновляемые поля
             if update_fields:
-                # Обновляем данные пользователя в базе данных
-                await UserDao.update_data(id=user_data["id"], **update_fields)
+                await UserOrm.update_data(id=user_data["id"], **update_fields)
 
             # Возвращаем сообщение об успешном обновлении данных
             return {"message": "Data updated successfully"}
@@ -165,41 +224,21 @@ class UserService:
         Изображение ставится по умолчанию
         """
         try:
-            user_id = int(decode_jwt_user_id(jwt_token.token))
-            user_data = await UserDao.found_or_none_data(id=user_id)
+            user_data = await UserCheck.get_user_info(id=DecodeJWT.decode_jwt(jwt_token.token))
 
             if not user_data:
-                return JSONResponse(
-                    status_code=409, content={"detail": "User not found"}
-                )
-
+                return user_data
             password = get_password_hash(user_data["password"])
             update_fields = {
-                "name": f"Удаленный пользователь # {user_id}",
+                "name": f"Удаленный пользователь # {user_data['id']}",
                 "password": password,
             }
 
-            await UserDao.update_data(id=user_id, **update_fields)
+            await UserOrm.update_data(id=user_data['id'], **update_fields)
 
             image_path = "https://sun9-29.userapi.com/impg/pz9-fVteFIutK6Sv301oGwJ2R3zqvCLD2eNfhw/ibCOtsp660k.jpg?size=900x1273&quality=95&sign=19b109da64ca92935675a770365a4d0a&type=album"
-            await ImageDao.update_data(id=user_id, image_path=image_path)
+            await ImageOrm.update_data(id=user_data['id'], image_path=image_path)
 
             return {"message": "User deleted successfully"}
         except Exception as e:
             logger_error.error(f"Error in delete_user: {str(e)}")
-
-    @staticmethod
-    async def avatar_user(name: str):
-        """
-        Случайно выбирает аватар пользователю.
-        Создает запись в таблице, с id пользователя и путем до изображения
-        """
-        list_avatar = [1, 2, 3, 4, 5]
-
-        number_avatar = random.choice(list_avatar)
-        image_path = f"/static/image_default/image_default_{number_avatar}.webp"
-        try:
-            user_info = await UserDao.found_data_by_column("id", name=name)
-            await ImageDao.insert_data(user_id=user_info["id"], image_path=image_path)
-        except Exception as e:
-            logger_error.error(f"Error in avatar_user: {str(e)}")

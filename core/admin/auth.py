@@ -4,9 +4,9 @@ from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 
-from core.chat.users.auth import (create_access_token, decode_jwt_user_id,
-                                  verification_password)
-from core.dao.users_dao.user_dao import UserDao
+from core.utils.auth import (create_access_token, decode_jwt_user_id,
+                             verification_password)
+from core.orm.user_orm import UserOrm
 from core.logs.logs import logger_error
 
 
@@ -17,7 +17,7 @@ class AdminAuth(AuthenticationBackend):
             form = await request.form()
             name, password = form["username"], form["password"]
 
-            user = await UserDao.found_or_none_data(name=name)
+            user = await UserOrm.found_one_or_none(name=name)
             if not user or not verification_password(password, user["password"]):
                 return JSONResponse(
                     status_code=409, content={"detail": "Invalid credentials"}

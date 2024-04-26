@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from core.dao.users_dao.user_service import UserService
+from core.layers.user_layer import UserLayer
 from core.logs.logs import logger_response
 from core.schemas.users_schemas import (JWTTokenSchema, UserDataLoginSchema,
                                         UserDataRegisterSchema,
@@ -19,7 +19,7 @@ async def register_admin(data_user: UserDataRegisterSchema):
     :return:
     """
     logger_response.info("Register admin")
-    return await UserService.register_user(data_user, default_user=False)
+    return await UserLayer.register_user(data_user, default_user=False)
 
 
 @router_auth.post("/register-user", status_code=201, summary="Register user")
@@ -30,7 +30,7 @@ async def register_default_user(data_user: UserDataRegisterSchema):
     :return: Если успешно 201 статус код. Json с сообщением
     """
     logger_response.info("User registered")
-    return await UserService.register_user(data_user)
+    return await UserLayer.register_user(data_user)
 
 
 @router_user.get("/all", status_code=200, summary="Show all users")
@@ -40,7 +40,7 @@ async def all_user():
     :return: Если успешно 200 статус код. Данные в виде json
     """
     logger_response.info("Show all user")
-    return await UserService.show_all_users()
+    return await UserLayer.show_all_users()
 
 
 @router_user.post("/me", status_code=200, summary="Show info about user")
@@ -51,7 +51,7 @@ async def user_info(jwt_token: JWTTokenSchema):
     :return: Если успешно 200 статус код. json с данным пользователя
     """
     logger_response.info("Show info user")
-    return await UserService.user_info(jwt_token)
+    return await UserLayer.user_info(jwt_token)
 
 
 @router_user.post("/login", status_code=200, summary="Login user")
@@ -62,7 +62,7 @@ async def login_user(data_user: UserDataLoginSchema):
     :return: Возвращает json с jwt токеном пользователя. При успешном входе 201 статус код.
     """
     logger_response.info("User is login")
-    return await UserService.login_user(data_user)
+    return await UserLayer.login_user(data_user)
 
 
 @router_user.patch("/update", status_code=201, summary="Update data user")
@@ -75,7 +75,7 @@ async def update_data_user(
     :return: Возвращает json с сообщением. При успешном обновлении 201 статус код.
     """
     logger_response.info("User update data")
-    return await UserService.update_data_user(data_update, jwt_token)
+    return await UserLayer.update_data_user(data_update, jwt_token)
 
 
 @router_user.delete("/delete", status_code=201, summary="Delete user")
@@ -86,4 +86,4 @@ async def delete_user(jwt_token: JWTTokenSchema):
     :return: Если успешно 204 статус код
     """
     logger_response.info("User deleted")
-    return await UserService.delete_user(jwt_token)
+    return await UserLayer.delete_user(jwt_token)

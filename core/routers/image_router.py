@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, UploadFile
 
-from core.dao.image_dao.image_service import ImageService
+from core.layers.image_layer import ImageService
 from core.logs.logs import logger_response
 
 router = APIRouter(prefix="/avatar", tags=["Upload image"])

@@ -1,18 +1,18 @@
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from core.dao.base import BaseDao
+from core.orm.base_orm import BaseOrm
 from core.database import async_session_maker
 from core.logs.logs import logger_error
 from core.models.image_models import Image
 from core.models.users_models import Users
 
 
-class UserDao(BaseDao):
+class UserOrm(BaseOrm):
     model = Users
 
     @classmethod
-    async def select_user_info(cls, user_id):
+    async def user_info(cls, user_id):
         """
         Находит всю информацию по пользователю
         Возвращает все данные по пользователю
@@ -28,7 +28,7 @@ class UserDao(BaseDao):
                         cls.model.id.label("user_id"),
                         cls.model.name,
                         cls.model.role,
-                        Image.image_path,
+                        Image.image_path.label("user_avatar"),
                     )
                     .select_from(cls.model)
                     .join(Image, cls.model.id == Image.user_id, isouter=True)
