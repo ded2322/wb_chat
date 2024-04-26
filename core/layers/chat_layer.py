@@ -15,7 +15,7 @@ from core.schemas.message_schemas import WebSocketDataSchema
 
 class WebsocketSerializer:
     @staticmethod
-    async def serialize_message(user_id: int, message: str, date_send):
+    async def serialize_message(user_id: int, message: str, date_send:list):
         """
         Сериализует данные в json.
         Возвращает json с ником, изображение, сообщением, датой отправки, ?с какой стороны сообщение?
@@ -28,7 +28,8 @@ class WebsocketSerializer:
             "name": data_user["name"],
             "user_avatar": file_path["image_path"],
             "message": message,
-            "time_send": date_send
+            "message_id": date_send[1],
+            "time_send": date_send[0]
         }
 
         return json.dumps(data)
@@ -36,7 +37,7 @@ class WebsocketSerializer:
 
 class WebsocketMessageAddDB:
     @staticmethod
-    async def add_message_db(user_id: int, message: str):
+    async def add_message_db(user_id: int, message: str)->list:
         """
         Добавляет данные в базу данных.
         Возвращает время когда было отправлено сообщение
@@ -47,10 +48,21 @@ class WebsocketMessageAddDB:
         time_object = datetime.strptime(formatted_time, "%H:%M:%S").time()
 
         # Добавляем в базу данных сообщение
-        await MessagesOrm.insert_data(
+        id_column = await MessagesOrm.insert_data(
             user_id=user_id, message=message, time_send=time_object
         )
-        return formatted_time
+        return [formatted_time, id_column]
+
+
+class WebsocketValidator:
+    @classmethod
+    async def validate_recent_data(cls, data_json):
+        try:
+            websocket_data = WebSocketDataSchema.parse_raw(data_json)
+            return websocket_data
+        except ValidationError as e:
+            logger_websocket.error(f"Invalid message format: {str(e)}")
+            return False
 
 
 class WebsocketService:
@@ -64,21 +76,20 @@ class WebsocketService:
             try:
                 while True:
                     data_json = await websocket.receive_text()
-                    try:
-                        # десериализует данные из json
-                        websocket_data = WebSocketDataSchema.parse_raw(data_json)
-                    except ValidationError as e:
-                        logger_websocket.error(f"Invalid message format: {str(e)}")
-                        await cls.send_user_message("Invalid format", websocket)
+
+                    passing_validation = await WebsocketValidator.validate_recent_data(data_json)
+                    if not passing_validation:
+                        await WebsocketService.send_user_message("Invalid format", websocket)
                         await websocket.close()
 
-                    user_id = DecodeJWT.decode_jwt(websocket_data.token)
+                    user_id = DecodeJWT.decode_jwt(passing_validation.token)
                     if not user_id:
                         await cls.send_user_message("Invalid token", websocket)
                         break
 
-                    message_input = websocket_data.message
+                    message_input = passing_validation.message
                     await cls.process_message(user_id, message_input, websocket)
+
             except WebSocketDisconnect:
                 logger_websocket.info("User disconnected")
             except Exception as e:

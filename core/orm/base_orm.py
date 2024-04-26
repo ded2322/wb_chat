@@ -82,8 +82,10 @@ class BaseOrm:
             """
             try:
                 query = insert(cls.model).values(**kwargs)
-                await session.execute(query)
+                result = await session.execute(query)
+                inserted_id = result.inserted_primary_key[0]
                 await session.commit()
+                return inserted_id
             except (SQLAlchemyError, Exception) as e:
                 if isinstance(e, SQLAlchemyError):
                     logger_error.error(f"SQLAlchemy exc in insert_data: {str(e)}")
