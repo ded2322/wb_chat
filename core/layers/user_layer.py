@@ -164,7 +164,7 @@ class UserLayer:
             # Создается токен доступа
             jwt_token = create_access_token({"sub": str(user["id"])})
 
-            return {"token": jwt_token}
+            return {"token": jwt_token, "user_id": user["id"]}
 
         except Exception as e:
             logger_error.error(f"Error in login_user: {str(e)}")
