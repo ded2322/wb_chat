@@ -243,7 +243,7 @@ class UserLayer:
                 return user_data
             password = get_password_hash(user_data["password"])
             update_fields = {
-                "name": f"Удаленный пользователь # {user_data['id']}",
+                "name": f"Удаленный # {user_data['id']}",
                 "password": password,
             }
 
