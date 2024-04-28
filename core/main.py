@@ -13,7 +13,7 @@ from core.routers.user_router import router_auth as auth_router
 from core.routers.user_router import router_user as user_router
 from core.database import engine
 
-app = FastAPI(title="Real-time routers", version="1.3")
+app = FastAPI(title="Real-time chat", version="1.4")
 
 app.mount("/static", StaticFiles(directory="/core/static"), "static")
 

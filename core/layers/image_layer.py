@@ -1,4 +1,5 @@
 import shutil
+import io
 from pathlib import Path
 
 from fastapi import BackgroundTasks, UploadFile
@@ -11,21 +12,28 @@ from core.logs.logs import logger_error
 
 
 class ValidImage:
-    VALID_EXTENSIONS = ["png", "jpg", "webp"]
+    VALID_EXTENSIONS = ["png", "jpg", "webp", "jpeg"]
 
     @classmethod
-    def is_valid_image(cls, image: UploadFile) -> JSONResponse | bool:
+    async def is_valid_image(cls, image: UploadFile) -> JSONResponse | bool:
         """
         Проверка расширения файла
         :return: Если расширение доступно возвращает True
         """
-        max_size_image = 5242880
-        valid_extensions = image.filename.split(".")[-1] in cls.VALID_EXTENSIONS
-        if image.size > max_size_image or not valid_extensions:
-            logger_error.error(f"User try upload {str(image)}")
-            return JSONResponse(
-                status_code=400, content={"detail": "Invalid image"}
-            )
+        try:
+            valid_extensions = image.filename.split(".")[-1] in cls.VALID_EXTENSIONS
+
+            # 1 мегабайт
+            max_size_image = 1_048_576
+
+            if (image.size > max_size_image) or not valid_extensions:
+                logger_error.error(f"Size image {image.size}. User try upload {str(image)}")
+                return JSONResponse(
+                    status_code=400, content={"detail": "Invalid image"}
+                )
+
+        except Exception as e:
+            logger_error.error(f"Error in is_valid_image {str(e)}")
 
         return False
 
@@ -60,15 +68,15 @@ class ImagePathUpdater:
 
 class ImageService:
     @classmethod
-    async def save_resize_image(
+    async def save_image(
             cls, token: str, image: UploadFile, background_tasks: BackgroundTasks
     ):
         """
         Принимает изображение, сохраняет изображение и уменьшает его размер.
         Возвращает сообщение об успешном сохранении
         """
-        # 5 мегабайт
-        data_image = ValidImage.is_valid_image(image)
+
+        data_image = await ValidImage.is_valid_image(image)
         if data_image:
             return data_image
 

@@ -15,7 +15,7 @@ from core.schemas.message_schemas import WebSocketDataSchema
 
 class WebsocketSerializer:
     @staticmethod
-    async def serialize_message(user_id: int, message: str, date_send:list):
+    async def serialize_message(user_id: int, message: str, date_send: list):
         """
         Сериализует данные в json.
         Возвращает json с ником, изображение, сообщением, датой отправки, ?с какой стороны сообщение?
@@ -37,7 +37,7 @@ class WebsocketSerializer:
 
 class WebsocketMessageAddDB:
     @staticmethod
-    async def add_message_db(user_id: int, message: str)->list:
+    async def add_message_db(user_id: int, message: str) -> list:
         """
         Добавляет данные в базу данных.
         Возвращает время когда было отправлено сообщение
@@ -59,9 +59,20 @@ class WebsocketValidator:
     async def validate_recent_data(cls, data_json):
         try:
             websocket_data = WebSocketDataSchema.parse_raw(data_json)
+
+            if await cls.check_data(websocket_data.message) or await cls.check_data(websocket_data.token):
+                return False
+
             return websocket_data
         except ValidationError as e:
             logger_websocket.error(f"Invalid message format: {str(e)}")
+            return False
+
+    @classmethod
+    async def check_data(cls, data_check: str) -> bool:
+        if not data_check.isspace():
+            return True
+        else:
             return False
 
 

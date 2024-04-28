@@ -65,6 +65,9 @@ class UserValidator:
     async def register_user_validator(cls,
                                       data_user: UserDataRegisterSchema, default_user: bool = True
                                       ):
+        # проверка на пустоту
+        if await cls.check_data(data_user.name) or await UserValidator.check_data(data_user.password):
+            return JSONResponse(status_code=409, content={"detail": "Field must not be empty"})
 
         # Ищет, есть ли пользователи с таким же именем
         if await UserCheck.check_username_exists(name=data_user.name):
@@ -75,7 +78,15 @@ class UserValidator:
 
         if default_user and data_user.role > 1:
             return JSONResponse(status_code=409, content={"detail": "Invalid role"})
+
         return False
+
+    @classmethod
+    async def check_data(cls, data_check: str) -> bool:
+        if not data_check.isspace():
+            return False
+        else:
+            return True
 
     @classmethod
     async def login_user_validator(cls, user, data_user: UserDataLoginSchema):
@@ -131,8 +142,10 @@ class UserLayer:
         При регистрации случайным образом присваиваются изображения
         """
         try:
+            # валидация данных, проверка, что имя не занято, корректная роль, не пустые поля
             validator = await UserValidator.register_user_validator(data_user, default_user)
             if validator:
+                # если не проходит возвращает ошибку
                 return validator
 
             # Хеширует пароль

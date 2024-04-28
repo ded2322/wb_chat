@@ -18,5 +18,5 @@ async def upload_avatar(
     :return: При успешной установке аватара {"message": "Image installed successfully"}.
     """
     logger_response.info("User upload image")
-    await ImageService.save_resize_image(token, image, background_tasks)
+    await ImageService.save_image(token, image, background_tasks)
     return {"message": "Image sent for resize"}
