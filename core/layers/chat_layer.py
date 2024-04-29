@@ -24,12 +24,13 @@ class WebsocketSerializer:
         file_path = await ImageOrm.found_data_by_column("image_path", user_id=user_id)
 
         data = {
+            "user_id": data_user["id"],
             "role": data_user["role"],
             "name": data_user["name"],
             "user_avatar": file_path["image_path"],
             "message": message,
             "message_id": date_send[1],
-            "time_send": date_send[0]
+            "time_send": date_send[0],
         }
 
         return json.dumps(data)

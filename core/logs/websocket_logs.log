@@ -4,3 +4,5 @@
 2024-04-29 06:20:00,803 - ERROR - Error in create_connect: Cannot call "send" once a close message has been sent.
 2024-04-29 06:22:08,812 - INFO - User connected
 2024-04-29 06:22:08,880 - INFO - User disconnected
+2024-04-29 09:53:23,817 - INFO - User connected
+2024-04-29 09:53:23,917 - INFO - User disconnected
