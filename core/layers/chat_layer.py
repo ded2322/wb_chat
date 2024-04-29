@@ -60,7 +60,7 @@ class WebsocketValidator:
         try:
             websocket_data = WebSocketDataSchema.parse_raw(data_json)
 
-            if await cls.check_data(websocket_data.message) or await cls.check_data(websocket_data.token):
+            if not await cls.check_data(websocket_data.message) or not await cls.check_data(websocket_data.token):
                 return False
 
             return websocket_data
