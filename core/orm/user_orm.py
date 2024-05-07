@@ -14,13 +14,14 @@ class UserOrm(BaseOrm):
     @classmethod
     async def user_info(cls, user_id):
         """
-        Находит всю информацию по пользователю
+        Находит всю информацию по пользователю.
         Возвращает все данные по пользователю
         """
         async with async_session_maker() as session:
             try:
                 """
-                SELECT users.name, users.password, images.image_path FROM users
+                SELECT users.id as user_id, users.name, users.password, images.image_path as user_avatar
+                FROM users
                 LEFT JOIN images on users.id = images.user_id
                 """
                 query = (

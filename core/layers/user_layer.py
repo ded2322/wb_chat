@@ -99,7 +99,7 @@ class UserValidator:
         return False
 
     @classmethod
-    def update_data_user_validator(cls, user_data):
+    def  update_data_user_validator(cls, user_data):
         if not user_data:
             return JSONResponse(
                 status_code=409, content={"detail": "User not found"}
@@ -249,7 +249,7 @@ class UserLayer:
 
             await UserOrm.update_data(id=user_data['id'], **update_fields)
 
-            image_path = "https://sun9-29.userapi.com/impg/pz9-fVteFIutK6Sv301oGwJ2R3zqvCLD2eNfhw/ibCOtsp660k.jpg?size=900x1273&quality=95&sign=19b109da64ca92935675a770365a4d0a&type=album"
+            image_path = "/static/image_default/image_delete_user.png"
             await ImageOrm.update_data(id=user_data['id'], image_path=image_path)
 
             return {"message": "User deleted successfully"}

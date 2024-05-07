@@ -12,23 +12,23 @@ volumes:
       device: './core/static/'
 
 services:
-#  nginx:
-#    build:
-#      context: .
-#      dockerfile: "Dockerfile.nginx"
-#    container_name: chat_nginx
-#    ports:
-#      - "80:80"
-#    links:
-#      - chat_service
-  db:
-      image: postgres:16
-      container_name: "chat_db"
-      env_file:
-        - .env_dev
-      ports:
-        - "5432:5432"
+  nginx:
+    build:
+      context: .
+      dockerfile: "Dockerfile.nginx"
+    container_name: chat_nginx
+    ports:
+      - "8080:8080"
+    links:
+      - chat_service
 
+  db:
+    image: postgres:16
+    container_name: "chat_db"
+    env_file:
+      - .env_dev
+    ports:
+      - "5432:5432"
 
   chat_service:
     build:
@@ -42,6 +42,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      #- ..:/code
       - core-static:/core/static/
       - ./core/logs:/core/logs
 

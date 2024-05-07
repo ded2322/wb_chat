@@ -17,24 +17,13 @@ app = FastAPI(title="Real-time chat", version="1.4")
 
 app.mount("/static", StaticFiles(directory="/core/static"), "static")
 
-# todo картинка удаленного пользователя
-
-# alembic revision --autogenerate -m "init"  alembic upgrade head
-"""
-DB_USER=postgres
-DB_PASS=root
-DB_NAME=App
-DB_HOST=localhost
-DB_PORT=5432
-"""
-
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(chat_router)
 app.include_router(image_router)
 app.include_router(wb_router)
 
-origins = ["http://localhost:3000", "http://localhost:5173"]
+origins = ["http://192.168.0.108"]
 
 app.add_middleware(
     CORSMiddleware,

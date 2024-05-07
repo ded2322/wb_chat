@@ -19,7 +19,7 @@ class MessagesOrm(BaseOrm):
         """
         async with async_session_maker() as session:
             """
-            SELECT messages.message, messages.time_sent, images.image_path, users.name FROM messages
+            SELECT messages.id, messages.message, messages.time_sent, images.image_path, users.name FROM messages
             LEFT JOIN users ON messages.user_id = users.id
             LEFT JOIN images ON messages.user_id = images.user_id
             ORDER BY messages.id
@@ -42,6 +42,8 @@ class MessagesOrm(BaseOrm):
                     .order_by(desc(cls.model.id))
                     .limit(50)
                 )
+                # Флаг, который позволяет отобразить от n сообщения, а не только последние 50
+                # За такое Мартин Роберт меня бы побил, но я не знаю как не плодить дубликат без флага
                 if load_previous and message_id is not None:
                     query = query.where(cls.model.id < message_id)
 
