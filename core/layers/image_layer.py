@@ -87,6 +87,7 @@ class ImageService:
         with open(image_path_original, "wb+") as file_object:
             shutil.copyfileobj(image.file, file_object)
 
-        # выполняется в фоновом режиме
+        # отправка задач в фоновый режим
+        #todo запихнуть в брокер сообщений
         background_tasks.add_task(ResizeImage.resize_image, image_path_original, image_path_resize)
         background_tasks.add_task(ImagePathUpdater.update_file_path_user, user_id, image_path_resize)

@@ -44,7 +44,7 @@ class WebsocketMessageAddDB:
         Возвращает время когда было отправлено сообщение
         """
         current_time = datetime.now().time()
-
+        #todo секунды убрать, текущее время?
         formatted_time = current_time.strftime("%H:%M:%S")
         time_object = datetime.strptime(formatted_time, "%H:%M:%S").time()
 

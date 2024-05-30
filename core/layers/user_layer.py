@@ -99,7 +99,7 @@ class UserValidator:
         return False
 
     @classmethod
-    def  update_data_user_validator(cls, user_data):
+    def update_data_user_validator(cls, user_data):
         if not user_data:
             return JSONResponse(
                 status_code=409, content={"detail": "User not found"}
